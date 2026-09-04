@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
 import { FolderPlusIcon, LinkIcon, PencilIcon, XMarkIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
 import { Highlighted } from './highlight'
@@ -6,18 +6,25 @@ import {
   TreeProvider, TreeView, TreeNode, TreeNodeTrigger, TreeNodeContent,
   TreeExpander, TreeIcon, TreeLabel, TreeLines,
 } from '@/components/kibo-ui/tree'
+import type { TreeNode as BookmarkNode, FolderNode } from './types'
 
 const DND_MIME = 'application/x-myhomepage-node-id'
+
+interface DragHandlerProps {
+  draggable: boolean
+  onDragStart: (e: DragEvent) => void
+  onDragEnd: () => void
+  onDragOver: (e: DragEvent) => void
+  onDragLeave: (e: DragEvent) => void
+  onDrop: (e: DragEvent) => void
+}
 
 /** Must match the `indent` given to TreeProvider below. */
 const INDENT = 20
 
-/** Height of one row (px): py-2 + a size-4 (20px line-height) label. */
-const ROW_H = 36
-
 /** ids of every node that matches `query` by name, plus all of their ancestors. */
-function matchIds(nodes, query, ancestors = []) {
-  const ids = new Set()
+function matchIds(nodes: BookmarkNode[], query: string, ancestors: string[] = []): Set<string> {
+  const ids = new Set<string>()
   for (const node of nodes) {
     const isMatch = node.name.toLowerCase().includes(query.toLowerCase())
     if (isMatch) {
@@ -46,14 +53,14 @@ function matchIds(nodes, query, ancestors = []) {
  * deepest and release the rest by dropping them back to `position: static`,
  * which lets them scroll away normally.
  */
-function useInnermostSticky(scrollRef, deps) {
+function useInnermostSticky(scrollRef: RefObject<HTMLDivElement | null>, deps: unknown[]) {
   useEffect(() => {
     const panel = scrollRef.current?.closest('.scroll-themed')
     if (!panel) return
 
     const sync = () => {
       const top = panel.getBoundingClientRect().top
-      const rows = [...panel.querySelectorAll('[data-folder-row]')]
+      const rows = [...panel.querySelectorAll<HTMLElement>('[data-folder-row]')]
       if (rows.length === 0) return
 
       // A pinned sticky row reports the panel top as its position, which makes
@@ -85,10 +92,23 @@ function useInnermostSticky(scrollRef, deps) {
   }, deps)
 }
 
-function Row({ node, query, onEdit, onRemove, onAdd }) {
-  const isFolder = node.type === 'folder'
-  const hasChildren = isFolder && node.children.length > 0
-  const Icon = isFolder ? getIcon(node.icon) : LinkGlyph
+function Row({
+  node,
+  query,
+  onEdit,
+  onRemove,
+  onAdd,
+}: {
+  node: BookmarkNode
+  query: string
+  onEdit: (node: BookmarkNode) => void
+  onRemove: (id: string) => void
+  onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
+}) {
+  const folderNode = node.type === 'folder' ? node : null
+  const isFolder = folderNode !== null
+  const hasChildren = isFolder && folderNode.children.length > 0
+  const Icon = isFolder ? getIcon(folderNode.icon) : LinkGlyph
 
   return (
     <>
@@ -96,17 +116,17 @@ function Row({ node, query, onEdit, onRemove, onAdd }) {
       <TreeIcon icon={<Icon className="size-4" />} hasChildren={hasChildren} />
       <TreeLabel><Highlighted text={node.name} query={query} /></TreeLabel>
       <span className="ml-2 hidden shrink-0 items-center gap-0.5 group-hover:flex">
-        {isFolder && (
+        {folderNode && (
           <>
             <button
               title="Add folder"
               className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(node, 'folder') }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
             ><FolderPlusIcon /></button>
             <button
               title="Add link"
               className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(node, 'link') }}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
             ><LinkIcon /></button>
           </>
         )}
@@ -125,12 +145,31 @@ function Row({ node, query, onEdit, onRemove, onAdd }) {
   )
 }
 
-function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, onEdit, onRemove, onAdd, onMove, draggingId, dragOverId, setDragOverId, onDragging }) {
-  const shown = query ? nodes.filter((n) => visible.has(n.id)) : nodes
+interface NodesProps {
+  nodes: BookmarkNode[]
+  parentId?: string | null
+  level: number
+  query: string
+  visible: Set<string> | null
+  newTab: boolean
+  selectedId: string | null
+  onEdit: (node: BookmarkNode) => void
+  onRemove: (id: string) => void
+  onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
+  onMove: (id: string, targetId: string | null) => void
+  draggingId: string | null
+  dragOverId: string | null
+  setDragOverId: (id: string | null | ((cur: string | null) => string | null)) => void
+  onDragging: (id: string | null) => void
+}
+
+function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, onEdit, onRemove, onAdd, onMove, draggingId, dragOverId, setDragOverId, onDragging }: NodesProps) {
+  const shown = query ? nodes.filter((n) => visible?.has(n.id)) : nodes
 
   return shown.map((node, i) => {
-    const isFolder = node.type === 'folder'
-    const hasChildren = isFolder && node.children.length > 0
+    const folderNode = node.type === 'folder' ? node : null
+    const isFolder = folderNode !== null
+    const hasChildren = isFolder && folderNode.children.length > 0
     const isLast = i === shown.length - 1
     // Dropping on a link row means "into the folder that link lives in", so a
     // bookmark can be filed without hitting the folder row itself.
@@ -142,24 +181,24 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
 
     const dragProps = {
       draggable: true,
-      onDragStart: (e) => {
+      onDragStart: (e: DragEvent) => {
         e.dataTransfer.effectAllowed = 'move'
         e.dataTransfer.setData(DND_MIME, node.id)
         onDragging(node.id)
       },
       onDragEnd: () => onDragging(null),
-      onDragOver: (e) => {
+      onDragOver: (e: DragEvent) => {
         if (!e.dataTransfer.types.includes(DND_MIME)) return
         e.preventDefault()
         e.stopPropagation()
         e.dataTransfer.dropEffect = 'move'
         setDragOverId(node.id)
       },
-      onDragLeave: (e) => {
+      onDragLeave: (e: DragEvent) => {
         e.stopPropagation()
         setDragOverId((cur) => (cur === node.id ? null : cur))
       },
-      onDrop: (e) => {
+      onDrop: (e: DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
         setDragOverId(null)
@@ -170,7 +209,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
 
     return (
       <TreeNode key={node.id} nodeId={node.id} level={level} isLast={isLast}>
-        {isFolder ? (
+        {folderNode ? (
           <TreeNodeTrigger
             // Sticky so the folder you're scrolling through keeps its header
             // in view. A parent's sticky range spans its whole subtree, so at
@@ -199,11 +238,11 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
               // opaque even when selected (see data-selected above).
               backgroundColor: 'var(--card)',
             }}
-            {...dragProps}
+            {...(dragProps as DragHandlerProps)}
           >
             <Row node={node} query={query} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
           </TreeNodeTrigger>
-        ) : (
+        ) : node.type === 'link' && (
           <a
             href={node.url}
             title={node.url}
@@ -218,10 +257,10 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             <Row node={node} query={query} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
           </a>
         )}
-        {hasChildren && (
+        {hasChildren && folderNode && (
           <TreeNodeContent hasChildren={hasChildren}>
             <Nodes
-              nodes={node.children}
+              nodes={folderNode.children}
               parentId={node.id}
               draggingId={draggingId}
               level={level + 1}
@@ -254,14 +293,34 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
  * highlighted. Clearing the query reverts to the user's own expand/collapse
  * state.
  */
-export default function FolderTree({ tree, query = '', selectedId, newTab, onEdit, onRemove, onAdd, onMove, onSelect }) {
+export default function FolderTree({
+  tree,
+  query = '',
+  selectedId,
+  newTab,
+  onEdit,
+  onRemove,
+  onAdd,
+  onMove,
+  onSelect,
+}: {
+  tree: BookmarkNode[]
+  query?: string
+  selectedId: string | null
+  newTab: boolean
+  onEdit: (node: BookmarkNode) => void
+  onRemove: (id: string) => void
+  onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
+  onMove: (id: string, targetId: string | null) => void
+  onSelect: (id: string | null) => void
+}) {
   const trimmedQuery = query.trim()
   const visible = trimmedQuery ? matchIds(tree, trimmedQuery) : null
-  const hasResults = !trimmedQuery || visible.size > 0
-  const [dragOverId, setDragOverId] = useState(null)
+  const hasResults = !trimmedQuery || (visible?.size ?? 0) > 0
+  const [dragOverId, setDragOverId] = useState<string | null>(null)
   const [rootDragOver, setRootDragOver] = useState(false)
-  const [dragging, setDragging] = useState(null)  // id of the node being dragged
-  const rootRef = useRef(null)
+  const [dragging, setDragging] = useState<string | null>(null)  // id of the node being dragged
+  const rootRef = useRef<HTMLDivElement>(null)
   useInnermostSticky(rootRef, [tree, trimmedQuery])
 
   if (tree.length === 0) {
@@ -281,17 +340,17 @@ export default function FolderTree({ tree, query = '', selectedId, newTab, onEdi
   }
 
   const rootDropProps = {
-    onDragOver: (e) => {
+    onDragOver: (e: DragEvent) => {
       if (!e.dataTransfer.types.includes(DND_MIME)) return
       e.preventDefault()
       e.dataTransfer.dropEffect = 'move'
       setRootDragOver(true)
     },
-    onDragLeave: (e) => {
-      if (e.currentTarget.contains(e.relatedTarget)) return
+    onDragLeave: (e: DragEvent) => {
+      if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
       setRootDragOver(false)
     },
-    onDrop: (e) => {
+    onDrop: (e: DragEvent) => {
       e.preventDefault()
       setRootDragOver(false)
       const draggedId = e.dataTransfer.getData(DND_MIME)
@@ -304,7 +363,7 @@ export default function FolderTree({ tree, query = '', selectedId, newTab, onEdi
       // Remount on query change so search-driven auto-expand doesn't
       // fight with (and isn't left behind by) the user's manual toggles.
       key={trimmedQuery}
-      defaultExpandedIds={trimmedQuery ? [...visible] : []}
+      defaultExpandedIds={trimmedQuery && visible ? [...visible] : []}
       selectedIds={selectedId ? [selectedId] : []}
       onSelectionChange={(ids) => onSelect(ids[0] ?? null)}
       showLines

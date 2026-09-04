@@ -22,4 +22,4 @@ export const ICONS = {
 }
 
 export const ICON_KEYS = Object.keys(ICONS)
-export const getIcon = (key) => ICONS[key] || FolderIcon
+export const getIcon = (key?: string) => (key && ICONS[key as keyof typeof ICONS]) || FolderIcon

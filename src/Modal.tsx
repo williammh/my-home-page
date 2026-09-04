@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode, type ChangeEvent, type FormEvent } from 'react'
 import { ICON_KEYS, getIcon } from './icons'
 import { Button } from '@/components/ui/button'
 import { DATE_FORMATS } from './dateFormats'
 import { DEFAULT_SETTINGS } from './store'
+import type { FolderNode, LinkNode, Settings } from './types'
 
 const TIME_ZONES = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : []
 
-function Shell({ title, onClose, children }) {
+function Shell({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
-    const onKey = (e) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
@@ -29,11 +30,19 @@ function Shell({ title, onClose, children }) {
 const labelCls = 'mb-1.5 mt-3.5 block text-xs font-semibold uppercase tracking-wider text-muted-foreground first-of-type:mt-0'
 const inputCls = 'w-full rounded-lg border border-border bg-card px-3 py-2.5 text-foreground outline-none focus:border-primary'
 
-export function FolderModal({ initial, onSave, onClose }) {
+export function FolderModal({
+  initial,
+  onSave,
+  onClose,
+}: {
+  initial?: FolderNode
+  onSave: (data: { name: string; icon: string }) => void
+  onClose: () => void
+}) {
   const [name, setName] = useState(initial?.name ?? '')
   const [icon, setIcon] = useState(initial?.icon ?? 'folder')
 
-  const save = (e) => {
+  const save = (e: FormEvent) => {
     e.preventDefault()
     if (!name.trim()) return
     onSave({ name: name.trim(), icon })
@@ -80,16 +89,24 @@ export function FolderModal({ initial, onSave, onClose }) {
 const MAX_BACKGROUND_FILE_BYTES = 3 * 1024 * 1024
 
 const segmentedCls = 'inline-flex rounded-lg border border-border bg-card p-0.5'
-const segmentBtnCls = (active) =>
+const segmentBtnCls = (active: boolean) =>
   `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
     active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
   }`
 
-export function SettingsModal({ initial, onSave, onClose }) {
+export function SettingsModal({
+  initial,
+  onSave,
+  onClose,
+}: {
+  initial: Settings
+  onSave: (data: Settings) => void
+  onClose: () => void
+}) {
   const [name, setName] = useState(initial.name ?? '')
   const [timeZone, setTimeZone] = useState(initial.timeZone)
   const [dateFormat, setDateFormat] = useState(initial.dateFormat)
-  const [textTheme, setTextTheme] = useState(initial.textTheme ?? 'light')
+  const [textTheme, setTextTheme] = useState<'light' | 'dark'>(initial.textTheme ?? 'light')
   const [glass, setGlass] = useState(initial.glass ?? true)
   const [openInNewTab, setOpenInNewTab] = useState(initial.openInNewTab ?? false)
   const [backgroundImage, setBackgroundImage] = useState(initial.backgroundImage ?? '')
@@ -101,7 +118,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
   )
   const [fileError, setFileError] = useState('')
 
-  const save = (e) => {
+  const save = (e: FormEvent) => {
     e.preventDefault()
     onSave({
       name: name.trim(),
@@ -115,7 +132,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
     })
   }
 
-  const onFile = (e) => {
+  const onFile = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
@@ -125,7 +142,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
     }
     setFileError('')
     const reader = new FileReader()
-    reader.onload = () => setBackgroundImage(reader.result)
+    reader.onload = () => setBackgroundImage(String(reader.result ?? ''))
     reader.readAsDataURL(file)
   }
 
@@ -210,7 +227,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
               className={inputCls}
             />
             <div className="mt-2 flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('background-file-input').click()}>
+              <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('background-file-input')?.click()}>
                 Choose from device
               </Button>
               {backgroundImage && (
@@ -260,11 +277,19 @@ export function SettingsModal({ initial, onSave, onClose }) {
   )
 }
 
-export function LinkModal({ initial, onSave, onClose }) {
+export function LinkModal({
+  initial,
+  onSave,
+  onClose,
+}: {
+  initial?: LinkNode
+  onSave: (data: { name: string; url: string }) => void
+  onClose: () => void
+}) {
   const [name, setName] = useState(initial?.name ?? '')
   const [url, setUrl] = useState(initial?.url ?? '')
 
-  const save = (e) => {
+  const save = (e: FormEvent) => {
     e.preventDefault()
     const u = url.trim()
     if (!u) return

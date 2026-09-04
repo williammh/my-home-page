@@ -1,27 +1,51 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type HTMLAttributes } from 'react';
 import './SplitFlapText.css';
 
 const DEFAULT_WORDS = ['LAUNCH READY', 'SYNC ONLINE', 'SIGNAL LIVE'];
 
-const CHARSETS = {
+const CHARSETS: Record<string, string> = {
   alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
   alphanumeric: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
   numeric: '0123456789'
 };
 
-const toCssUnit = value => (typeof value === 'number' ? `${value}px` : value);
+interface Tile {
+  current: string
+  next: string
+  flipping: boolean
+  tick: number
+}
 
-const resolveCharset = charset => {
+interface TileUpdate {
+  index: number
+  current: string
+  next: string
+  done: boolean
+}
+
+interface FlipPlan {
+  index: number
+  from: string
+  target: string
+  sequence: string[]
+  start: number
+  step: number
+  done: boolean
+}
+
+const toCssUnit = (value: number | string) => (typeof value === 'number' ? `${value}px` : value);
+
+const resolveCharset = (charset: string) => {
   if (CHARSETS[charset]) return CHARSETS[charset];
   return typeof charset === 'string' && charset.length > 0 ? charset : CHARSETS.alphanumeric;
 };
 
-const normalizePhrase = (phrase, width) => {
+const normalizePhrase = (phrase: string, width: number) => {
   const safe = String(phrase ?? '');
   return safe.padEnd(width, ' ').slice(0, width);
 };
 
-const createTiles = phrase =>
+const createTiles = (phrase: string): Tile[] =>
   phrase.split('').map(char => ({
     current: char,
     next: char,
@@ -29,10 +53,10 @@ const createTiles = phrase =>
     tick: 0
   }));
 
-const sampleChar = charset => charset.charAt(Math.floor(Math.random() * charset.length)) || ' ';
+const sampleChar = (charset: string) => charset.charAt(Math.floor(Math.random() * charset.length)) || ' ';
 
-const buildSequence = (target, flips, charset) => {
-  const steps = [];
+const buildSequence = (target: string, flips: number, charset: string) => {
+  const steps: string[] = [];
   for (let i = 0; i < flips; i += 1) {
     steps.push(sampleChar(charset));
   }
@@ -58,6 +82,25 @@ const usePrefersReducedMotion = () => {
   return prefersReduced;
 };
 
+interface SplitFlapTextProps extends HTMLAttributes<HTMLDivElement> {
+  words?: string[]
+  text?: string
+  flipDuration?: number
+  stagger?: number
+  cycleDelay?: number
+  charset?: string
+  flipsPerChar?: number
+  tileColor?: string
+  textColor?: string
+  tileRadius?: number | string
+  gap?: number | string
+  fontSize?: number | string
+  loop?: boolean
+  padTo?: number
+  className?: string
+  style?: CSSProperties
+}
+
 const SplitFlapText = ({
   words = ['LAUNCH READY', 'SYNC ONLINE', 'SIGNAL LIVE'],
   text,
@@ -76,10 +119,10 @@ const SplitFlapText = ({
   className = '',
   style = {},
   ...props
-}) => {
+}: SplitFlapTextProps) => {
   const prefersReducedMotion = usePrefersReducedMotion();
-  const rafRef = useRef(null);
-  const cycleTimerRef = useRef(null);
+  const rafRef = useRef<number | null>(null);
+  const cycleTimerRef = useRef<number | null>(null);
   const currentTextRef = useRef('');
 
   const sourceWords = Array.isArray(words) && words.length > 0 ? words : DEFAULT_WORDS;
@@ -127,7 +170,7 @@ const SplitFlapText = ({
     const safeFlips = Math.max(0, Math.floor(Number(flipsPerChar) || 0));
     const activeCharset = resolveCharset(charset);
 
-    const animateTo = targetPhrase => {
+    const animateTo = (targetPhrase: string) => {
       if (prefersReducedMotion) {
         currentTextRef.current = targetPhrase;
         setTiles(createTiles(targetPhrase));
@@ -138,7 +181,7 @@ const SplitFlapText = ({
       const targetChars = targetPhrase.split('');
 
       const plans = targetChars
-        .map((targetChar, index) => {
+        .map((targetChar, index): FlipPlan | null => {
           const fromChar = fromPhrase[index] || ' ';
           if (fromChar === targetChar) return null;
 
@@ -152,7 +195,7 @@ const SplitFlapText = ({
             done: false
           };
         })
-        .filter(Boolean);
+        .filter((plan): plan is FlipPlan => plan !== null);
 
       if (!plans.length) {
         currentTextRef.current = targetPhrase;
@@ -166,7 +209,7 @@ const SplitFlapText = ({
       );
       const startedAt = performance.now();
 
-      const updateTiles = updates => {
+      const updateTiles = (updates: TileUpdate[]) => {
         setTiles(previous => {
           const nextTiles = [...previous];
           updates.forEach(update => {
@@ -184,11 +227,11 @@ const SplitFlapText = ({
         });
       };
 
-      const tick = now => {
+      const tick = (now: number) => {
         if (cancelled) return;
 
         const elapsed = now - startedAt;
-        const updates = [];
+        const updates: TileUpdate[] = [];
         let shouldContinue = false;
 
         plans.forEach(plan => {
@@ -238,7 +281,7 @@ const SplitFlapText = ({
       return totalDuration;
     };
 
-    const scheduleNext = delay => {
+    const scheduleNext = (delay: number) => {
       cycleTimerRef.current = window.setTimeout(() => {
         if (cancelled) return;
 
@@ -272,7 +315,7 @@ const SplitFlapText = ({
     '--split-flap-font-size': toCssUnit(fontSize),
     '--split-flap-flip-duration': `${Math.max(0.04, Number(flipDuration) || 0.12)}s`,
     ...style
-  };
+  } as CSSProperties;
 
   return (
     <div

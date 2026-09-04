@@ -1,10 +1,31 @@
-"use client";;
+"use client";
 import { ChevronRight, File, Folder, FolderOpen } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-import { createContext, useCallback, useContext, useId, useState } from "react";
+import { AnimatePresence, motion, type HTMLMotionProps } from "motion/react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useId,
+  useState,
+  type HTMLAttributes,
+  type ReactNode,
+} from "react";
 import { cn } from "@/lib/utils";
 
-const TreeContext = createContext(undefined);
+interface TreeContextValue {
+  expandedIds: Set<string>;
+  selectedIds: string[];
+  toggleExpanded: (nodeId: string) => void;
+  handleSelection: (nodeId: string, ctrlKey?: boolean) => void;
+  showLines: boolean;
+  showIcons: boolean;
+  selectable: boolean;
+  multiSelect: boolean;
+  indent: number;
+  animateExpand: boolean;
+}
+
+const TreeContext = createContext<TreeContextValue | undefined>(undefined);
 
 const useTree = () => {
   const context = useContext(TreeContext);
@@ -14,7 +35,14 @@ const useTree = () => {
   return context;
 };
 
-const TreeNodeContext = createContext(undefined);
+interface TreeNodeContextValue {
+  nodeId: string;
+  level: number;
+  isLast: boolean;
+  parentPath: boolean[];
+}
+
+const TreeNodeContext = createContext<TreeNodeContextValue | undefined>(undefined);
 
 const useTreeNode = () => {
   const context = useContext(TreeNodeContext);
@@ -23,6 +51,20 @@ const useTreeNode = () => {
   }
   return context;
 };
+
+export interface TreeProviderProps {
+  children?: ReactNode;
+  defaultExpandedIds?: string[];
+  showLines?: boolean;
+  showIcons?: boolean;
+  selectable?: boolean;
+  multiSelect?: boolean;
+  selectedIds?: string[];
+  onSelectionChange?: (ids: string[]) => void;
+  indent?: number;
+  animateExpand?: boolean;
+  className?: string;
+}
 
 export const TreeProvider = ({
   children,
@@ -36,7 +78,7 @@ export const TreeProvider = ({
   indent = 20,
   animateExpand = true,
   className
-}) => {
+}: TreeProviderProps) => {
   const [expandedIds, setExpandedIds] = useState(new Set(defaultExpandedIds));
   const [internalSelectedIds, setInternalSelectedIds] = useState(selectedIds ?? []);
 
@@ -44,7 +86,7 @@ export const TreeProvider = ({
     selectedIds !== undefined && onSelectionChange !== undefined;
   const currentSelectedIds = isControlled ? selectedIds : internalSelectedIds;
 
-  const toggleExpanded = useCallback((nodeId) => {
+  const toggleExpanded = useCallback((nodeId: string) => {
     setExpandedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(nodeId)) {
@@ -57,12 +99,12 @@ export const TreeProvider = ({
   }, []);
 
   const handleSelection = useCallback(
-    (nodeId, ctrlKey = false) => {
+    (nodeId: string, ctrlKey = false) => {
       if (!selectable) {
         return;
       }
 
-      let newSelection;
+      let newSelection: string[];
 
       if (multiSelect && ctrlKey) {
         newSelection = currentSelectedIds.includes(nodeId)
@@ -118,11 +160,18 @@ export const TreeView = ({
   className,
   children,
   ...props
-}) => (
+}: HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("p-2", className)} {...props}>
     {children}
   </div>
 );
+
+export interface TreeNodeProps extends HTMLAttributes<HTMLDivElement> {
+  nodeId?: string;
+  level?: number;
+  isLast?: boolean;
+  parentPath?: boolean[];
+}
 
 export const TreeNode = ({
   nodeId: providedNodeId,
@@ -133,7 +182,7 @@ export const TreeNode = ({
   className,
   onClick,
   ...props
-}) => {
+}: TreeNodeProps) => {
   const generatedId = useId();
   const nodeId = providedNodeId ?? generatedId;
 
@@ -165,12 +214,19 @@ export const TreeNode = ({
   );
 };
 
+type NativeDragHandlers = Pick<
+  HTMLAttributes<HTMLDivElement>,
+  "onDragStart" | "onDragEnd" | "onDragOver" | "onDragLeave" | "onDrop"
+>;
+
 export const TreeNodeTrigger = ({
   children,
   className,
   onClick,
   ...props
-}) => {
+}: Omit<HTMLMotionProps<"div">, "children" | keyof NativeDragHandlers> & {
+  children?: ReactNode;
+} & NativeDragHandlers) => {
   const { selectedIds, toggleExpanded, handleSelection, indent } = useTree();
   const { nodeId, level } = useTreeNode();
   const isSelected = selectedIds.includes(nodeId);
@@ -190,7 +246,7 @@ export const TreeNodeTrigger = ({
       }}
       style={{ paddingLeft: level * (indent ?? 0) + 8 }}
       whileTap={{ scale: 0.98, transition: { duration: 0.1 } }}
-      {...props}
+      {...(props as unknown as Omit<HTMLMotionProps<"div">, "children">)}
     >
       <TreeLines />
       {children}
@@ -251,12 +307,16 @@ export const TreeLines = () => {
   );
 };
 
+export interface TreeNodeContentProps extends HTMLMotionProps<"div"> {
+  hasChildren?: boolean;
+}
+
 export const TreeNodeContent = ({
   children,
   hasChildren = false,
   className,
   ...props
-}) => {
+}: TreeNodeContentProps) => {
   const { animateExpand, expandedIds } = useTree();
   const { nodeId } = useTreeNode();
   const isExpanded = expandedIds.has(nodeId);
@@ -304,12 +364,16 @@ export const TreeNodeContent = ({
   );
 };
 
+export interface TreeExpanderProps extends HTMLMotionProps<"div"> {
+  hasChildren?: boolean;
+}
+
 export const TreeExpander = ({
   hasChildren = false,
   className,
   onClick,
   ...props
-}) => {
+}: TreeExpanderProps) => {
   const { expandedIds, toggleExpanded } = useTree();
   const { nodeId } = useTreeNode();
   const isExpanded = expandedIds.has(nodeId);
@@ -338,12 +402,17 @@ export const TreeExpander = ({
   );
 };
 
+export interface TreeIconProps extends HTMLMotionProps<"div"> {
+  icon?: ReactNode;
+  hasChildren?: boolean;
+}
+
 export const TreeIcon = ({
   icon,
   hasChildren = false,
   className,
   ...props
-}) => {
+}: TreeIconProps) => {
   const { showIcons, expandedIds } = useTree();
   const { nodeId } = useTreeNode();
   const isExpanded = expandedIds.has(nodeId);
@@ -381,6 +450,6 @@ export const TreeIcon = ({
 export const TreeLabel = ({
   className,
   ...props
-}) => (
+}: HTMLAttributes<HTMLSpanElement>) => (
   <span className={cn("font flex-1 truncate text-sm", className)} {...props} />
 );

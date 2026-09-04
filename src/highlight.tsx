@@ -1,5 +1,5 @@
 /** Wrap the first case-insensitive occurrence of `query` in `text` with <mark>. */
-export function Highlighted({ text, query }) {
+export function Highlighted({ text, query }: { text: string; query?: string }) {
   if (!query) return text
   const i = text.toLowerCase().indexOf(query.toLowerCase())
   if (i === -1) return text

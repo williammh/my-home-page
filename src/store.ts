@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { STATIC_SHORTCUTS } from './shortcuts'
 import { ICONS } from './icons'
+import type { TreeNode, FolderNode, LinkNode, Settings } from './types'
 
 const KEY = 'myhomepage.tree.v1'
 const SHORTCUTS_KEY = 'myhomepage.shortcuts.v1'
@@ -11,7 +12,7 @@ const uid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(
 // index.css) — the default so white headline text has contrast out of the box.
 export const DEFAULT_BACKGROUND_COLOR = '#090b0c'
 
-export const DEFAULT_SETTINGS = {
+export const DEFAULT_SETTINGS: Settings = {
   name: '',
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   dateFormat: 'long',
@@ -22,10 +23,10 @@ export const DEFAULT_SETTINGS = {
   openInNewTab: false,
 }
 
-export const newFolder = (name, icon = 'folder') => ({
+export const newFolder = (name: string, icon = 'folder'): FolderNode => ({
   id: uid(), type: 'folder', name, icon, children: [],
 })
-export const newLink = (name, url) => ({ id: uid(), type: 'link', name, url })
+export const newLink = (name: string, url: string): LinkNode => ({ id: uid(), type: 'link', name, url })
 
 /**
  * Coerce parsed JSON from an imported file into well-formed tree nodes.
@@ -40,12 +41,12 @@ export const newLink = (name, url) => ({ id: uid(), type: 'link', name, url })
  * every tree operation — edit, delete, move, React keys — matches on id, so a
  * collision would make two nodes act as one.
  */
-function sanitizeNodes(input, depth = 0) {
+function sanitizeNodes(input: unknown, depth = 0): TreeNode[] {
   // Depth cap: a deeply nested (or maliciously constructed) file would other-
   // wise recurse until the stack blows.
   if (!Array.isArray(input) || depth > 20) return []
 
-  return input.flatMap((raw) => {
+  return input.flatMap((raw): TreeNode[] => {
     if (!raw || typeof raw !== 'object') return []
 
     const name = typeof raw.name === 'string' ? raw.name.trim() : ''
@@ -78,7 +79,7 @@ function sanitizeNodes(input, depth = 0) {
  * `javascript:` URL that runs in this page's origin the moment it's clicked,
  * which would turn importing someone's bookmarks into running their code.
  */
-function isSafeUrl(url) {
+function isSafeUrl(url: string) {
   try {
     const { protocol } = new URL(url)
     return protocol === 'http:' || protocol === 'https:'
@@ -88,19 +89,19 @@ function isSafeUrl(url) {
 }
 
 /** Nodes parsed out of an exported-tree JSON file, or [] if it isn't one. */
-export function parseImportedTree(text) {
+export function parseImportedTree(text: string): TreeNode[] {
   return sanitizeNodes(JSON.parse(text))
 }
 
 /** Total folders + links in a node list, for reporting what an import added. */
-export function countNodes(nodes) {
+export function countNodes(nodes: TreeNode[]): number {
   return nodes.reduce(
     (n, node) => n + 1 + (node.type === 'folder' ? countNodes(node.children) : 0),
     0
   )
 }
 
-function load() {
+function load(): TreeNode[] {
   try {
     const raw = localStorage.getItem(KEY)
     if (!raw) return []
@@ -112,7 +113,7 @@ function load() {
 }
 
 /** Recursively insert `node` into the folder with id `parentId` (null = root). */
-function insert(nodes, parentId, node) {
+function insert(nodes: TreeNode[], parentId: string | null, node: TreeNode): TreeNode[] {
   if (parentId === null) return [...nodes, node]
   return nodes.map((n) => {
     if (n.id === parentId && n.type === 'folder') {
@@ -125,29 +126,29 @@ function insert(nodes, parentId, node) {
   })
 }
 
-function remove(nodes, id) {
+function remove(nodes: TreeNode[], id: string): TreeNode[] {
   return nodes
     .filter((n) => n.id !== id)
     .map((n) => (n.type === 'folder' ? { ...n, children: remove(n.children, id) } : n))
 }
 
-function update(nodes, id, patch) {
+function update(nodes: TreeNode[], id: string, patch: Partial<TreeNode>): TreeNode[] {
   return nodes.map((n) => {
-    if (n.id === id) return { ...n, ...patch }
+    if (n.id === id) return { ...n, ...patch } as TreeNode
     if (n.type === 'folder') return { ...n, children: update(n.children, id, patch) }
     return n
   })
 }
 
 /** True if `id` is `targetId` itself, or `targetId` lies somewhere inside `id`'s subtree. */
-function contains(node, targetId) {
+function contains(node: TreeNode, targetId: string): boolean {
   if (node.id === targetId) return true
   if (node.type !== 'folder') return false
   return node.children.some((c) => contains(c, targetId))
 }
 
 /** Move node `id` to be a child of the folder `targetId` (null = root). No-op if the move is invalid. */
-function move(nodes, id, targetId) {
+function move(nodes: TreeNode[], id: string, targetId: string | null): TreeNode[] {
   if (id === targetId) return nodes
   const node = findPath(nodes, id)?.at(-1)
   if (!node) return nodes
@@ -160,7 +161,7 @@ function move(nodes, id, targetId) {
 }
 
 /** Path of folder nodes from root down to `id`, for breadcrumbs. */
-export function findPath(nodes, id, trail = []) {
+export function findPath(nodes: TreeNode[], id: string, trail: TreeNode[] = []): TreeNode[] | null {
   for (const n of nodes) {
     if (n.id === id) return [...trail, n]
     if (n.type === 'folder') {
@@ -184,17 +185,17 @@ export function useTree() {
 
   return {
     tree,
-    addNode: useCallback((parentId, node) => setTree((t) => insert(t, parentId, node)), []),
-    removeNode: useCallback((id) => setTree((t) => remove(t, id)), []),
-    updateNode: useCallback((id, patch) => setTree((t) => update(t, id, patch)), []),
-    moveNode: useCallback((id, targetId) => setTree((t) => move(t, id, targetId)), []),
+    addNode: useCallback((parentId: string | null, node: TreeNode) => setTree((t) => insert(t, parentId, node)), []),
+    removeNode: useCallback((id: string) => setTree((t) => remove(t, id)), []),
+    updateNode: useCallback((id: string, patch: Partial<TreeNode>) => setTree((t) => update(t, id, patch)), []),
+    moveNode: useCallback((id: string, targetId: string | null) => setTree((t) => move(t, id, targetId)), []),
     // Appends at the root rather than replacing, so an import can never
     // silently destroy bookmarks the user already had.
-    importNodes: useCallback((nodes) => setTree((t) => [...t, ...nodes]), []),
+    importNodes: useCallback((nodes: TreeNode[]) => setTree((t) => [...t, ...nodes]), []),
   }
 }
 
-function loadShortcuts() {
+function loadShortcuts(): LinkNode[] {
   try {
     const raw = localStorage.getItem(SHORTCUTS_KEY)
     if (!raw) return STATIC_SHORTCUTS
@@ -218,16 +219,16 @@ export function useShortcuts() {
 
   return {
     shortcuts,
-    addShortcut: useCallback((node) => setShortcuts((s) => [...s, node]), []),
-    removeShortcut: useCallback((id) => setShortcuts((s) => s.filter((n) => n.id !== id)), []),
+    addShortcut: useCallback((node: LinkNode) => setShortcuts((s) => [...s, node]), []),
+    removeShortcut: useCallback((id: string) => setShortcuts((s) => s.filter((n) => n.id !== id)), []),
     updateShortcut: useCallback(
-      (id, patch) => setShortcuts((s) => s.map((n) => (n.id === id ? { ...n, ...patch } : n))),
+      (id: string, patch: Partial<LinkNode>) => setShortcuts((s) => s.map((n) => (n.id === id ? { ...n, ...patch } : n))),
       []
     ),
   }
 }
 
-function loadSettings() {
+function loadSettings(): Settings {
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
     if (!raw) return DEFAULT_SETTINGS
@@ -250,6 +251,6 @@ export function useSettings() {
 
   return {
     settings,
-    updateSettings: useCallback((patch) => setSettings((s) => ({ ...s, ...patch })), []),
+    updateSettings: useCallback((patch: Partial<Settings>) => setSettings((s) => ({ ...s, ...patch })), []),
   }
 }

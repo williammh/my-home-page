@@ -4,10 +4,11 @@ import SplitFlapText from './components/SplitFlapText'
 import Greeting from './Greeting'
 import { DATE_FORMATS, DEFAULT_DATE_FORMAT } from './dateFormats'
 import { headlineCls } from './textTheme'
+import type { Settings } from './types'
 
-export default function Clock({ settings, onOpenSettings }) {
+export default function Clock({ settings, onOpenSettings }: { settings: Settings; onOpenSettings: () => void }) {
   const [now, setNow] = useState(() => new Date())
-  const prevTime = useRef(null)
+  const prevTime = useRef<string | null>(null)
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000)
@@ -21,7 +22,7 @@ export default function Clock({ settings, onOpenSettings }) {
     hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone,
   })
   const date = now.toLocaleDateString('en-US', { ...dateFormat.options, timeZone })
-  const tzLabel = timeZone.split('/').pop().replace(/_/g, ' ')
+  const tzLabel = (timeZone.split('/').pop() ?? timeZone).replace(/_/g, ' ')
 
   // SplitFlapText animates between the two phrases in `words` — feed it
   // [previous tick, current tick] so each change flips instead of snapping,

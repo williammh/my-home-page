@@ -17,7 +17,9 @@ export const SHORTCUTS = [
   'Maps|https://maps.google.com',
 ]
 
-export function parseShortcut(entry, i) {
+import type { LinkNode } from './types'
+
+export function parseShortcut(entry: string, i: number): LinkNode {
   const idx = entry.indexOf('|')
   const hasLabel = idx > 0 && /^https?:\/\//i.test(entry.slice(idx + 1).trim())
   const url = (hasLabel ? entry.slice(idx + 1) : entry).trim()

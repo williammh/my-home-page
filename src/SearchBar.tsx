@@ -1,12 +1,12 @@
 import { useRef, useEffect } from 'react'
 import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
 
-export default function SearchBar({ value, onChange }) {
-  const ref = useRef(null)
+export default function SearchBar({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLInputElement>(null)
 
   // "/" focuses search, the way it works most everywhere else.
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === '/' && document.activeElement !== ref.current) {
         e.preventDefault()
         ref.current?.focus()

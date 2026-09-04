@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { FolderPlusIcon, PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
@@ -8,18 +8,24 @@ import { FolderModal, LinkModal, SettingsModal } from './Modal'
 import { Button } from '@/components/ui/button'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
 import { headlineCls } from './textTheme'
+import type { FolderNode, LinkNode, Settings } from './types'
 
 const gridCls = 'grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-3 max-[520px]:grid-cols-[repeat(auto-fill,minmax(94px,1fr))]'
+
+type Modal =
+  | { kind: 'folder'; node?: FolderNode; target?: string | null }
+  | { kind: 'link'; node?: LinkNode; target?: string | null; isShortcut?: boolean }
+  | { kind: 'settings' }
 
 export default function App() {
   const { tree, addNode, removeNode, updateNode, moveNode, importNodes } = useTree()
   const { shortcuts, addShortcut, removeShortcut, updateShortcut } = useShortcuts()
   const { settings, updateSettings } = useSettings()
-  const [selectedId, setSelectedId] = useState(null)  // folder highlighted in the tree
-  const [modal, setModal] = useState(null)             // {kind:'folder'|'link'|'settings', node?, target?, isShortcut?}
+  const [selectedId, setSelectedId] = useState<string | null>(null)  // folder highlighted in the tree
+  const [modal, setModal] = useState<Modal | null>(null)
   const [query, setQuery] = useState('')
-  const [note, setNote] = useState(null)   // {ok, text} import/export banner under the Bookmarks header
-  const fileInputRef = useRef(null)
+  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // The glass treatment is driven by CSS variables keyed off `data-glass` on
   // <html> (see index.css), so toggling it is one attribute rather than a
@@ -33,26 +39,30 @@ export default function App() {
     ? shortcuts.filter((s) => s.name.toLowerCase().includes(trimmedQuery))
     : shortcuts
 
-  const save = (data) => {
+  const save = (data: Settings | { name: string; url: string } | { name: string; icon: string }) => {
+    if (!modal) return
     if (modal.kind === 'settings') {
-      updateSettings(data)
-    } else if (modal.isShortcut) {
+      updateSettings(data as Settings)
+    } else if (modal.kind === 'link' && modal.isShortcut) {
+      const linkData = data as { name: string; url: string }
       if (modal.node) {
-        updateShortcut(modal.node.id, data)
+        updateShortcut(modal.node.id, linkData)
       } else {
-        addShortcut(newLink(data.name, data.url))
+        addShortcut(newLink(linkData.name, linkData.url))
       }
     } else if (modal.node) {
       updateNode(modal.node.id, data)
     } else if (modal.kind === 'folder') {
-      addNode(modal.target ?? null, newFolder(data.name, data.icon))
+      const folderData = data as { name: string; icon: string }
+      addNode(modal.target ?? null, newFolder(folderData.name, folderData.icon))
     } else {
-      addNode(modal.target ?? null, newLink(data.name, data.url))
+      const linkData = data as { name: string; url: string }
+      addNode(modal.target ?? null, newLink(linkData.name, linkData.url))
     }
     setModal(null)
   }
 
-  const del = (id) => {
+  const del = (id: string) => {
     if (id === selectedId) setSelectedId(null)
     removeNode(id)
   }
@@ -60,7 +70,7 @@ export default function App() {
   // Import a previously exported tree (the `myhomepage.tree.v1` shape) from a
   // JSON file. Everything is validated in `parseImportedTree`; here we only
   // deal with reading the file and reporting the outcome.
-  const onImportFile = async (e) => {
+  const onImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Reset immediately so picking the same file twice in a row still fires
     // a change event.
@@ -216,7 +226,7 @@ export default function App() {
               selectedId={selectedId}
               newTab={settings.openInNewTab}
               onSelect={setSelectedId}
-              onEdit={(node) => setModal({ kind: node.type, node })}
+              onEdit={(node) => (node.type === 'folder' ? setModal({ kind: 'folder', node }) : setModal({ kind: 'link', node }))}
               onRemove={del}
               onAdd={(folder, kind) => setModal({ kind, target: folder.id })}
               onMove={moveNode}

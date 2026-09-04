@@ -1,7 +1,8 @@
 import { XMarkIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Highlighted } from './highlight'
+import type { LinkNode } from './types'
 
-const favicon = (url) => {
+const favicon = (url: string) => {
   try {
     return `https://www.google.com/s2/favicons?domain=${new URL(url).hostname}&sz=64`
   } catch {
@@ -12,7 +13,21 @@ const favicon = (url) => {
 const cardBase =
   'glass glass-hover group relative flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-[transform,background-color,border-color] duration-150 hover:-translate-y-0.5'
 
-export function LinkCard({ node, editable, query, newTab, onEdit, onRemove }) {
+export function LinkCard({
+  node,
+  editable,
+  query,
+  newTab,
+  onEdit,
+  onRemove,
+}: {
+  node: LinkNode
+  editable?: boolean
+  query?: string
+  newTab?: boolean
+  onEdit: (node: LinkNode) => void
+  onRemove: (id: string) => void
+}) {
   const src = favicon(node.url)
   return (
     // `noreferrer` implies `noopener`, but both are spelled out: the opened
