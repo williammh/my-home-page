@@ -12,10 +12,17 @@ const favicon = (url) => {
 const cardBase =
   'glass glass-hover group relative flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-[transform,background-color,border-color] duration-150 hover:-translate-y-0.5'
 
-export function LinkCard({ node, editable, query, onEdit, onRemove }) {
+export function LinkCard({ node, editable, query, newTab, onEdit, onRemove }) {
   const src = favicon(node.url)
   return (
-    <a className={cardBase} href={node.url} title={node.url}>
+    // `noreferrer` implies `noopener`, but both are spelled out: the opened
+    // page must not get a handle on this one via `window.opener`.
+    <a
+      className={cardBase}
+      href={node.url}
+      title={node.url}
+      {...(newTab && { target: '_blank', rel: 'noopener noreferrer' })}
+    >
       <div className="flex size-[34px] items-center justify-center">
         {src
           ? <img src={src} alt="" className="size-[30px] rounded-md" onError={(e) => { e.currentTarget.style.display = 'none' }} />

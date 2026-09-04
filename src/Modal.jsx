@@ -18,7 +18,7 @@ function Shell({ title, onClose, children }) {
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/55 p-5 backdrop-blur-[3px]"
       onMouseDown={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="max-h-[88vh] w-full max-w-[430px] overflow-y-auto rounded-2xl border border-border bg-background p-6 shadow-2xl">
+      <div className="scroll-themed max-h-[88vh] w-full max-w-[430px] overflow-y-auto rounded-2xl border border-border bg-background p-6 shadow-2xl">
         <h2 className="mb-[18px] text-[17px] font-semibold">{title}</h2>
         {children}
       </div>
@@ -91,6 +91,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
   const [dateFormat, setDateFormat] = useState(initial.dateFormat)
   const [textTheme, setTextTheme] = useState(initial.textTheme ?? 'light')
   const [glass, setGlass] = useState(initial.glass ?? true)
+  const [openInNewTab, setOpenInNewTab] = useState(initial.openInNewTab ?? false)
   const [backgroundImage, setBackgroundImage] = useState(initial.backgroundImage ?? '')
   const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor ?? '')
   // Background image and color are mutually exclusive — track which one the
@@ -108,6 +109,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
       dateFormat,
       textTheme,
       glass,
+      openInNewTab,
       backgroundImage: backgroundType === 'image' ? backgroundImage.trim() : '',
       backgroundColor: backgroundType === 'color' ? backgroundColor : '',
     })
@@ -133,6 +135,7 @@ export function SettingsModal({ initial, onSave, onClose }) {
     setDateFormat(DEFAULT_SETTINGS.dateFormat)
     setTextTheme(DEFAULT_SETTINGS.textTheme)
     setGlass(DEFAULT_SETTINGS.glass)
+    setOpenInNewTab(DEFAULT_SETTINGS.openInNewTab)
     setBackgroundImage(DEFAULT_SETTINGS.backgroundImage)
     setBackgroundColor(DEFAULT_SETTINGS.backgroundColor)
     setBackgroundType(DEFAULT_SETTINGS.backgroundImage ? 'image' : DEFAULT_SETTINGS.backgroundColor ? 'color' : 'none')
@@ -179,6 +182,15 @@ export function SettingsModal({ initial, onSave, onClose }) {
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">
           Translucent, blurred surfaces for the clock, search bar, shortcuts and bookmarks.
+        </p>
+
+        <label className={labelCls}>Open links in</label>
+        <div className={segmentedCls}>
+          <button type="button" className={segmentBtnCls(!openInNewTab)} onClick={() => setOpenInNewTab(false)}>Same tab</button>
+          <button type="button" className={segmentBtnCls(openInNewTab)} onClick={() => setOpenInNewTab(true)}>New tab</button>
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          Applies to shortcuts and bookmarks. Ctrl/Cmd-click (or middle-click) still does the opposite.
         </p>
 
         <label className={labelCls}>Background</label>

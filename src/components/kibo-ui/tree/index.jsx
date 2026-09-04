@@ -260,15 +260,22 @@ export const TreeNodeContent = ({
   const { animateExpand, expandedIds } = useTree();
   const { nodeId } = useTreeNode();
   const isExpanded = expandedIds.has(nodeId);
+  // `overflow-hidden` is only needed to clip the height-collapse animation.
+  // Left on afterwards it makes this div a scroll container, which traps any
+  // sticky descendant (nested folder headers) inside it instead of letting
+  // them pin to the panel — so drop it once the node has settled open.
+  const [animating, setAnimating] = useState(animateExpand);
 
   return (
     <AnimatePresence>
       {hasChildren && isExpanded && (
         <motion.div
           animate={{ height: "auto", opacity: 1 }}
-          className="overflow-hidden"
+          className={animating ? "overflow-hidden" : undefined}
           exit={{ height: 0, opacity: 0 }}
           initial={{ height: 0, opacity: 0 }}
+          onAnimationComplete={() => setAnimating(false)}
+          onAnimationStart={() => setAnimating(true)}
           transition={{
             duration: animateExpand ? 0.15 : 0,
             ease: "easeInOut",
@@ -283,6 +290,10 @@ export const TreeNodeContent = ({
               duration: animateExpand ? 0.1 : 0,
               delay: animateExpand ? 0.05 : 0,
             }}
+            // A lingering `transform` (even translateY(0)) also creates a
+            // containing block that traps sticky descendants, so clear it
+            // once the slide-in has settled.
+            style={animating ? undefined : { transform: "none" }}
             {...props}
           >
             {children}

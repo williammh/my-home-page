@@ -149,12 +149,20 @@
   --glass-tint-hover: oklch(1 0 0 / 76%);
   --glass-edge: oklch(1 0 0 / 55%);
   --glass-blur: 16px;
+  /* Scrollbar thumb: a wash of --foreground, so it inverts with the theme on
+     its own instead of needing a light and a dark color. */
+  --scroll-thumb: oklch(from var(--foreground) l c h / 22%);
+  --scroll-thumb-hover: oklch(from var(--foreground) l c h / 38%);
 }
 
 .dark {
   --glass-tint: oklch(0.218 0.008 223.9 / 52%);
   --glass-tint-hover: oklch(0.275 0.011 216.9 / 68%);
   --glass-edge: oklch(1 0 0 / 14%);
+  /* A light thumb on a dark panel needs more opacity than a dark one on a
+     light panel to carry the same weight. */
+  --scroll-thumb: oklch(from var(--foreground) l c h / 26%);
+  --scroll-thumb-hover: oklch(from var(--foreground) l c h / 45%);
 }
 
 /* Transparency off (Settings -> Glass effect). One attribute on <html> swaps
@@ -224,5 +232,95 @@
 
   .glass-panel :where([class*="bg-accent/80"]) {
     background-color: oklch(from var(--foreground) l c h / 12%);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Scrollbars
+   ---------------------------------------------------------------------------
+   The default scrollbar is an opaque OS-colored slab that ignores the theme
+   and sits on top of the glass. These rules restyle it from the same tokens
+   everything else uses: a transparent track (so the glass shows through) and
+   a translucent `--foreground` thumb, which reads correctly in both light and
+   dark without a second set of values.
+
+   Firefox only supports the two `scrollbar-*` properties; WebKit/Blink needs
+   the pseudo-elements, so both are declared. */
+@layer components {
+  .scroll-themed {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scroll-thumb) transparent;
+  }
+
+  .scroll-themed::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  .scroll-themed::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scroll-themed::-webkit-scrollbar-thumb {
+    background-color: var(--scroll-thumb);
+    border-radius: 999px;
+    /* Transparent border + `background-clip: content-box` insets the thumb
+       from the track edge, so it reads as a floating pill rather than a bar
+       welded to the panel wall. */
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+
+  .scroll-themed:hover::-webkit-scrollbar-thumb,
+  .scroll-themed::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scroll-thumb-hover);
+  }
+
+  /* The corner where the two bars meet, and the WebKit stepper buttons, both
+     default to a light gray patch that shows as a notch on a dark panel. */
+  .scroll-themed::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  .scroll-themed::-webkit-scrollbar-button {
+    display: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Sticky folder headers
+   ---------------------------------------------------------------------------
+   A folder row stays pinned while its contents scroll past. Because the row
+   would otherwise be transparent, rows scrolling underneath would show through
+   it, so give it the panel's own backdrop. */
+@layer components {
+  /* `.glass-panel :where(...)` above re-tints rows translucently on hover at
+     specificity 0-2-0. `:where()` contributes nothing, so these selectors keep
+     `.folder-sticky` outside it to reach 0-2-0 (0-3-0 for the attribute one)
+     and win — a bare `.folder-sticky` would lose and go see-through. */
+  .glass-panel .folder-sticky,
+  .glass-panel .folder-sticky:hover {
+    /* Opaque in every mode, glass effect on or off: `--glass-tint` is itself
+       translucent (62%/52%), so rows scrolling underneath a pinned header
+       would read through it. The glass panel behind already supplies the
+       see-through effect against the page background — the header only needs
+       to hide its own scrolling rows. */
+    background-color: var(--card);
+  }
+
+  /* Hover and selection tints are translucent (see the .glass-panel rules
+     above), which would make a pinned header see-through again. Layer the tint
+     as a gradient over the row's own opaque card background instead, so the
+     row keeps its feedback while staying solid. */
+  .glass-panel .folder-sticky:hover {
+    background-image: linear-gradient(
+      oklch(from var(--foreground) l c h / 8%) 0 100%
+    );
+  }
+
+  .glass-panel .folder-sticky[data-selected] {
+    background-image: linear-gradient(
+      oklch(from var(--foreground) l c h / 12%) 0 100%
+    );
   }
 }
