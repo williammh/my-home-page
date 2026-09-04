@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { FolderPlusIcon, PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
@@ -146,7 +147,7 @@ export default function App() {
                     className="rounded-lg"
                     onClick={() => setModal({ kind: 'link', isShortcut: true })}
                   >
-                    <PlusIcon /> Shortcut
+                    <PlusIcon /> New Shortcut
                   </Button>
                 )}
               </div>
@@ -174,10 +175,10 @@ export default function App() {
             </h3>
             <div className="flex gap-2">
               <Button variant="glass" className="rounded-lg" onClick={() => setModal({ kind: 'folder', target: null })}>
-                <FolderPlusIcon /> Folder
+                <FolderPlusIcon />New Folder
               </Button>
               <Button variant="glass" className="rounded-lg" onClick={() => setModal({ kind: 'link', target: null })}>
-                <PlusIcon /> Bookmark
+                <BookmarkSimpleIcon /> New Bookmark
               </Button>
               <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
                 <ArrowUpTrayIcon /> Import

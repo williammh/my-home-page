@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
-import { FolderPlusIcon, LinkIcon, PencilIcon, XMarkIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PencilIcon, XMarkIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
 import {
   TreeProvider, TreeView, TreeNode, TreeNodeTrigger, TreeNodeContent,
@@ -127,7 +128,7 @@ function Row({
               title="Add link"
               className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
-            ><LinkIcon /></button>
+            ><BookmarkSimpleIcon /></button>
           </>
         )}
         <button
