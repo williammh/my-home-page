@@ -5,13 +5,20 @@ Builds to a **single self-contained `dist/index.html`** — no external files.
 
 ## Use
 
+The built page is committed, so you don't need Node to use it. Download
+[`dist/index.html`](dist/index.html) (on GitHub: open the file, then **Raw** →
+save as), put it somewhere permanent, and point your browser's home page / new
+tab at its `file://` path — e.g. `file:///home/you/my-home-page/index.html`.
+It's fully self-contained, so that one file is all you need. Everything you add
+lives in that browser profile's `localStorage`, so keep the file where it is
+once you've set it (moving it changes the origin and hides your data).
+
+Or clone and build it yourself:
+
 ```bash
 npm run dev      # local dev server
 npm run build    # -> dist/index.html
 ```
-
-Set `dist/index.html` as your browser's home page / new tab (point it at the
-`file://` path, or drop it anywhere you can serve it from).
 
 ## Clock
 
