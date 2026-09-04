@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/oxanium";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.45rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.52 0.105 223.128);
+  --primary-foreground: oklch(0.984 0.019 200.873);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent-bg: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.963 0.002 197.1);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.609 0.126 221.723);
+  --sidebar-primary-foreground: oklch(0.984 0.019 200.873);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
+}
+
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.45 0.085 224.283);
+  --primary-foreground: oklch(0.984 0.019 200.873);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent-bg: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.275 0.011 216.9);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.715 0.143 215.221);
+  --sidebar-primary-foreground: oklch(0.302 0.056 229.695);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent-bg);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --font-heading: var(--font-sans);
+  --font-sans: 'Oxanium Variable', sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+/* ---------------------------------------------------------------------------
+   Glass surface
+   ---------------------------------------------------------------------------
+   One shared treatment for every floating surface that sits on the page
+   background (search bar, shortcut cards, the bookmarks panel, and the
+   add-shortcut / add-folder / add-link buttons). The background may be a
+   photo, a solid color, or nothing, so the tint is a translucent wash of
+   `--card` rather than a fixed white/black — it stays theme-driven and lets
+   whatever is behind it show through and blur.
+
+   `--glass-tint` / `--glass-edge` are the two knobs; the light and dark
+   values differ because a light backdrop needs a brighter, less opaque wash
+   to read as glass, while a dark one needs a lift to separate from the page.
+*/
+:root {
+  --glass-tint: oklch(1 0 0 / 62%);
+  --glass-tint-hover: oklch(1 0 0 / 76%);
+  --glass-edge: oklch(1 0 0 / 55%);
+  --glass-blur: 16px;
+}
+
+.dark {
+  --glass-tint: oklch(0.218 0.008 223.9 / 52%);
+  --glass-tint-hover: oklch(0.275 0.011 216.9 / 68%);
+  --glass-edge: oklch(1 0 0 / 14%);
+}
+
+/* Transparency off (Settings -> Glass effect). One attribute on <html> swaps
+   the tint to the fully opaque theme colors and zeroes the blur, so every
+   `.glass` surface reverts at once — no per-component conditionals, and any
+   glass surface added later is covered automatically. */
+:root[data-glass="off"] {
+  --glass-tint: var(--card);
+  --glass-tint-hover: var(--accent-bg);
+  --glass-edge: var(--border);
+  --glass-blur: 0px;
+}
+
+@layer components {
+  .glass {
+    background-color: var(--glass-tint);
+    border: 1px solid var(--glass-edge);
+    /* Saturation bump keeps color behind the glass from going flat and gray. */
+    /* Prefixed first: the minifier drops whichever of the two comes first
+       as a duplicate, and Firefox only understands the unprefixed one. */
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    transition: background-color 150ms, border-color 150ms;
+    /* Inner highlight along the top edge = the lit bevel that sells "glass";
+       the outer shadow lifts the panel off the background. */
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 22%),
+      0 2px 12px -4px oklch(0 0 0 / 18%);
+  }
+
+  :root[data-glass="off"] .glass {
+    /* A `blur(0px)` backdrop-filter still spawns a compositing layer (and on
+       some GPUs still faintly resamples), so drop the property outright. The
+       inset bevel goes too — on an opaque surface it reads as a smudge. */
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: 0 1px 2px 0 oklch(0 0 0 / 5%);
+  }
+
+  .glass-hover:hover {
+    background-color: var(--glass-tint-hover);
+    border-color: color-mix(in oklch, var(--primary), transparent 45%);
+  }
+
+  /* Focus ring for the glass input — same primary accent as before, but the
+     border brightens rather than switching to an opaque color. */
+  .glass-focus:focus {
+    border-color: color-mix(in oklch, var(--primary), transparent 30%);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 22%),
+      0 0 0 3px color-mix(in oklch, var(--primary), transparent 78%);
+  }
+
+  :root[data-glass="off"] .glass-focus:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary), transparent 78%);
+  }
+
+  /* Rows inside the glass bookmarks panel. The vendored tree component uses
+     `bg-accent/50` and `bg-accent/80`, which are opaque enough to read as
+     solid patches sitting on the glass rather than part of it. Overriding
+     from the panel keeps the vendored component untouched. */
+  .glass-panel :where(.group[class*="hover:bg-accent"]:hover),
+  .glass-panel :where(a.group:hover) {
+    background-color: oklch(from var(--foreground) l c h / 8%);
+  }
+
+  .glass-panel :where([class*="bg-accent/80"]) {
+    background-color: oklch(from var(--foreground) l c h / 12%);
+  }
+}
