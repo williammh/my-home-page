@@ -1,4 +1,4 @@
-import { XMarkIcon, PencilIcon } from '@heroicons/react/24/outline'
+import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Highlighted } from './highlight'
 import type { LinkNode } from './types'
 
@@ -57,7 +57,7 @@ export function LinkCard({
             title="Delete"
             className="flex rounded-md bg-foreground/10 p-1 text-muted-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 hover:text-foreground [&_svg]:size-[13px] [&_svg]:stroke-2"
             onClick={(e) => { e.preventDefault(); onRemove(node.id) }}
-          ><XMarkIcon /></button>
+          ><TrashIcon /></button>
         </span>
       )}
     </a>

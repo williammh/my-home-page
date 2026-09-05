@@ -19,7 +19,9 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
 
   return (
     <form className="relative mb-11" onSubmit={(e) => e.preventDefault()}>
-      <MagnifyingGlassIcon className="pointer-events-none absolute left-[18px] top-1/2 size-5 -translate-y-1/2 text-muted-foreground" />
+      {/* Above the input: `.glass`'s backdrop-filter makes the input its own
+          stacking context, which would otherwise paint over this icon. */}
+      <MagnifyingGlassIcon className="pointer-events-none absolute left-[18px] top-1/2 z-10 size-5 -translate-y-1/2 text-foreground/70" />
       <input
         ref={ref}
         value={value}
@@ -27,7 +29,7 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
         placeholder="Search shortcuts and bookmarks, or press /"
         spellCheck="false"
         autoComplete="off"
-        className="glass glass-focus w-full rounded-lg py-[15px] pl-[50px] pr-11 text-base text-foreground outline-none transition-[border-color,box-shadow,background-color] duration-150"
+        className="glass glass-focus w-full rounded-lg py-[15px] pl-[50px] pr-11 text-base text-foreground placeholder:text-foreground/70 outline-none transition-[border-color,box-shadow,background-color] duration-150"
       />
       {value && (
         <button

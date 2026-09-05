@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
-import { FolderPlusIcon, PencilIcon, XMarkIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PencilIcon, TrashIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
 import {
@@ -140,7 +140,7 @@ function Row({
           title="Delete"
           className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
-        ><XMarkIcon /></button>
+        ><TrashIcon /></button>
       </span>
     </>
   )
