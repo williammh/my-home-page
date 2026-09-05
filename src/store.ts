@@ -228,13 +228,42 @@ export function useShortcuts() {
   }
 }
 
+// The name can be set straight from the address: `index.html#Ada`. A hash is
+// used rather than a path segment or a query — `index.html/Ada` would ask the
+// filesystem for a file inside a non-directory and 404 before any of this
+// runs, and the built page is opened at a `file://` path with no server around
+// to rewrite it. The fragment never leaves the browser, so it works there.
+//
+// It's read once at load and then persisted like any other setting, so the
+// name sticks after the hash is dropped; a bare `#` clears it back to the
+// plain greeting rather than being ignored.
+function nameFromUrl(): string | null {
+  try {
+    const hash = window.location.hash
+    if (!hash.startsWith('#')) return null
+    // `decodeURIComponent` throws on a malformed escape (a stray `%`), which
+    // would otherwise take the whole settings load down with it.
+    let value: string
+    try {
+      value = decodeURIComponent(hash.slice(1).replace(/\+/g, ' '))
+    } catch {
+      value = hash.slice(1)
+    }
+    // Long inputs would blow out the headline, so cap what a link can set.
+    return value.trim().slice(0, 40)
+  } catch {
+    return null
+  }
+}
+
 function loadSettings(): Settings {
+  const urlName = nameFromUrl()
   try {
     const raw = localStorage.getItem(SETTINGS_KEY)
-    if (!raw) return DEFAULT_SETTINGS
-    return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) }
+    const stored: Settings = raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS
+    return urlName === null ? stored : { ...stored, name: urlName }
   } catch {
-    return DEFAULT_SETTINGS
+    return urlName === null ? DEFAULT_SETTINGS : { ...DEFAULT_SETTINGS, name: urlName }
   }
 }
 
