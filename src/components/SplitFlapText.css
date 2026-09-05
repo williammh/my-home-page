@@ -111,3 +111,58 @@
     animation: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Inline variant (`.clock-flaps`)
+   ---------------------------------------------------------------------------
+   The header clock is set inside a running sentence, so it reads as text, not
+   as a display board: no tile chip, border, or shadow, and the digits inherit
+   the sentence's font and size. Only the flip animation is kept — the motion
+   is the effect, the card around it was just chrome.
+
+   Because a tile is now exactly a character cell, its box is sized from the
+   font (`1em` tall, matching the digits themselves) rather than padded out to
+   a card, which is what kept the clock taller than the words around it. */
+.clock-flaps {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  letter-spacing: 0;
+  color: inherit;
+  /* Centered rather than baseline-aligned: a baseline-aligned flex item hangs
+     its whole box above the baseline, which stretched the sentence's line box
+     taller than the text on either side. */
+  align-self: center;
+}
+
+.clock-flaps .split-flap-text__tile {
+  /* `ch` is the digit advance width in a tabular font, so each cell is exactly
+     as wide as the numeral it holds — no card padding to widen the clock. */
+  width: 1ch;
+  height: 1em;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  /* The flip needs the two halves clipped, but with no card the overflow can
+     ride tight to the glyph box. */
+  overflow: hidden;
+}
+
+.clock-flaps .split-flap-text__char {
+  color: inherit;
+}
+
+/* No card means no seam: the hairline between the halves only made sense as
+   part of a physical-looking tile. */
+.clock-flaps .split-flap-text__half--top,
+.clock-flaps .split-flap-text__flap--front {
+  border-bottom: none;
+}
+
+/* Colons sit in their own cell; narrow it so the time reads as `5:54:09`
+   rather than as evenly-spaced monospace cells. `data-separator` is set by the
+   component (see SplitFlapText.tsx). */
+.clock-flaps .split-flap-text__tile[data-separator] {
+  width: 0.34em;
+}

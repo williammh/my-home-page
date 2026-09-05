@@ -129,17 +129,27 @@ export default function App() {
       ) : settings.backgroundColor ? (
         <div className="fixed inset-0 -z-10" style={{ backgroundColor: settings.backgroundColor }} />
       ) : null}
-      <div className="mx-auto flex h-screen max-w-[1080px] flex-col overflow-hidden px-6 py-[6vh]">
-        <div className="shrink-0 pt-[14vh]">
+      {/* `min-h-screen` rather than `h-screen`: the page is a single-screen
+          layout whenever it fits, but on a short or narrow viewport the
+          content grows and the page scrolls normally. Pinning to exactly one
+          screen instead made the header and the bookmarks panel compete for a
+          fixed budget, which clipped whichever lost through the middle of a
+          card. */}
+      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-6 pb-[5vh] pt-[clamp(24px,9vh,96px)]">
+        <div className="shrink-0">
           <Clock settings={settings} onOpenSettings={() => setModal({ kind: 'settings' })} />
           <SearchBar value={query} onChange={setQuery} />
 
           {(!trimmedQuery || matchedShortcuts.length > 0) && (
-            <section className="mb-3">
-              <div className="mb-3.5 flex flex-wrap items-center justify-between gap-3">
+            <section className="mb-5">
+              <div className={`mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${headlineCls(settings.textTheme)}`}>
                   Shortcuts
                 </h3>
+                {/* A hairline running from the label to the actions ties the
+                    two ends of the row together, so the button doesn't read as
+                    floating unattached at the far edge. */}
+                <div className="h-px flex-1 bg-current opacity-15" />
                 {!trimmedQuery && (
                   <Button
                     variant="glass"
@@ -168,12 +178,13 @@ export default function App() {
           )}
         </div>
 
-        <section className="flex min-h-0 flex-1 flex-col">
-          <div className="mb-3.5 flex shrink-0 flex-wrap items-center justify-between gap-3">
+        <section className="flex min-h-[320px] flex-1 flex-col">
+          <div className={`mb-3.5 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
             <h3 className={`text-xs font-semibold uppercase tracking-wider ${headlineCls(settings.textTheme)}`}>
               Bookmarks
             </h3>
-            <div className="flex gap-2">
+            <div className="h-px flex-1 bg-current opacity-15" />
+            <div className="flex flex-wrap gap-2">
               <Button variant="glass" className="rounded-lg" onClick={() => setModal({ kind: 'folder', target: null })}>
                 <FolderPlusIcon />New Folder
               </Button>

@@ -326,7 +326,15 @@ const SplitFlapText = ({
       {...props}
     >
       {tiles.map((tile, index) => (
-        <span className="split-flap-text__tile" aria-hidden="true" key={`${index}-${tiles.length}`}>
+        <span
+          className="split-flap-text__tile"
+          // Punctuation and blanks aren't digits: styling hooks off this so a
+          // variant can drop the tile chrome around them (see the inline clock
+          // in SplitFlapText.css) instead of showing an empty card.
+          data-separator={/[0-9A-Za-z]/.test(tile.current) ? undefined : ''}
+          aria-hidden="true"
+          key={`${index}-${tiles.length}`}
+        >
           <span className="split-flap-text__half split-flap-text__half--top">
             <span className="split-flap-text__char">{tile.current === ' ' ? '\u00A0' : tile.current}</span>
           </span>
