@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
-import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
@@ -34,6 +34,10 @@ export default function App() {
   // edit/delete buttons without needing a hover, for touch screens and for
   // seeing the whole grid's controls at once.
   const [editingShortcuts, setEditingShortcuts] = useState(false)
+  // Toggled by the bookmarks panel's own edit button: while on, every
+  // folder/link row shows its edit/delete buttons without needing a hover,
+  // mirroring "Edit Shortcuts" above.
+  const [editingBookmarks, setEditingBookmarks] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -241,6 +245,7 @@ export default function App() {
               query={query}
               selectedId={selectedId}
               newTab={settings.openInNewTab}
+              editing={editingBookmarks}
               onSelect={setSelectedId}
               onEdit={(node) => (node.type === 'folder' ? setModal({ kind: 'folder', node }) : setModal({ kind: 'link', node }))}
               onRemove={del}
@@ -258,6 +263,15 @@ export default function App() {
                 against the panel itself instead, and `sticky bottom-0` then
                 keeps it pinned once the tree grows past the panel's height. */}
             <div className="sticky bottom-0 z-50 ml-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
+              <Button
+                variant="glass"
+                className="rounded-lg"
+                title={editingBookmarks ? 'Done editing bookmarks' : 'Edit bookmarks'}
+                aria-pressed={editingBookmarks}
+                onClick={() => setEditingBookmarks((v) => !v)}
+              >
+                {editingBookmarks ? <CheckIcon /> : <PencilIcon />} Edit
+              </Button>
               <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
                 <ArrowUpTrayIcon /> Import
               </Button>

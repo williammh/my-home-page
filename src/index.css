@@ -167,7 +167,7 @@
   --glass-tint: oklch(0.218 0.008 223.9 / 52%);
   --glass-tint-hover: oklch(0.275 0.011 216.9 / 68%);
   --glass-edge: oklch(1 0 0 / 14%);
-  --sticky-row-bg: oklch(0.218 0.008 223.9 / 30%);
+  --sticky-row-bg: oklch(0.218 0.008 223.9 / 16%);
   /* A light thumb on a dark panel needs more opacity than a dark one on a
      light panel to carry the same weight. */
   --scroll-thumb: oklch(from var(--foreground) l c h / 26%);

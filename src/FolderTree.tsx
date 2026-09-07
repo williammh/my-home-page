@@ -96,12 +96,14 @@ function useInnermostSticky(scrollRef: RefObject<HTMLDivElement | null>, deps: u
 function Row({
   node,
   query,
+  editing,
   onEdit,
   onRemove,
   onAdd,
 }: {
   node: BookmarkNode
   query: string
+  editing: boolean
   onEdit: (node: BookmarkNode) => void
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
@@ -116,32 +118,34 @@ function Row({
       <TreeExpander hasChildren={hasChildren} />
       <TreeIcon icon={<Icon className="size-4" />} hasChildren={hasChildren} />
       <TreeLabel><Highlighted text={node.name} query={query} /></TreeLabel>
-      <span className="ml-2 hidden shrink-0 items-center gap-0.5 group-hover:flex">
-        {folderNode && (
-          <>
-            <button
-              title="Add folder"
-              className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
-            ><FolderPlusIcon /></button>
-            <button
-              title="Add link"
-              className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
-            ><BookmarkSimpleIcon /></button>
-          </>
-        )}
-        <button
-          title={isFolder ? 'Rename' : 'Edit'}
-          className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(node) }}
-        ><PencilIcon /></button>
-        <button
-          title="Delete"
-          className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
-        ><TrashIcon /></button>
-      </span>
+      {folderNode && (
+        <span className="ml-2 flex shrink-0 items-center gap-0.5">
+          <button
+            title="Add folder"
+            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
+          ><FolderPlusIcon /></button>
+          <button
+            title="Add link"
+            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
+          ><BookmarkSimpleIcon /></button>
+        </span>
+      )}
+      {editing && (
+        <span className="ml-2 flex shrink-0 items-center gap-0.5">
+          <button
+            title={isFolder ? 'Rename' : 'Edit'}
+            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(node) }}
+          ><PencilIcon /></button>
+          <button
+            title="Delete"
+            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
+          ><TrashIcon /></button>
+        </span>
+      )}
     </>
   )
 }
@@ -154,6 +158,7 @@ interface NodesProps {
   visible: Set<string> | null
   newTab: boolean
   selectedId: string | null
+  editing: boolean
   onEdit: (node: BookmarkNode) => void
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
@@ -164,7 +169,7 @@ interface NodesProps {
   onDragging: (id: string | null) => void
 }
 
-function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, onEdit, onRemove, onAdd, onMove, draggingId, dragOverId, setDragOverId, onDragging }: NodesProps) {
+function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, editing, onEdit, onRemove, onAdd, onMove, draggingId, dragOverId, setDragOverId, onDragging }: NodesProps) {
   const shown = query ? nodes.filter((n) => visible?.has(n.id)) : nodes
 
   return shown.map((node, i) => {
@@ -226,15 +231,18 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             // which beats any specificity in `components`, so it's overridden
             // by the inline backgroundColor below rather than by a CSS rule.
             data-selected={selectedId === node.id ? '' : undefined}
-            className={`sticky folder-sticky ${
+            className={`sticky folder-sticky -mx-3 rounded-none ${
               isDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
             // TreeNodeTrigger spreads props after its own style, so passing
             // `style` here replaces its paddingLeft — restate the indent.
+            // +12 compensates for the -mx-3 (12px) escape of the panel's own
+            // px-3 padding, so indentation still lines up despite the row now
+            // spanning the full panel width.
             style={{
               top: 0,
               zIndex: 10 + level,
-              paddingLeft: level * INDENT + 8,
+              paddingLeft: level * INDENT + 8 + 12,
               // Inline beats the `utilities` cascade layer, keeping the row's
               // own backdrop in place even when selected (see data-selected
               // above). `--sticky-row-bg` is opaque with glass off and a
@@ -244,21 +252,21 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             }}
             {...(dragProps as DragHandlerProps)}
           >
-            <Row node={node} query={query} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
+            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
           </TreeNodeTrigger>
         ) : node.type === 'link' && (
           <a
             href={node.url}
             title={node.url}
-            className={`group relative mx-1 flex cursor-pointer items-center rounded-md px-3 py-2 no-underline transition-all duration-200 hover:bg-accent/50 ${
+            className={`group relative -mx-3 flex cursor-pointer items-center rounded-none px-3 py-2 no-underline transition-all duration-200 hover:bg-accent/50 ${
               isDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
-            style={{ paddingLeft: level * 20 + 8 }}
+            style={{ paddingLeft: level * 20 + 8 + 12 }}
             {...(newTab && { target: '_blank', rel: 'noopener noreferrer' })}
             {...dragProps}
           >
             <TreeLines />
-            <Row node={node} query={query} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
+            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
           </a>
         )}
         {hasChildren && folderNode && (
@@ -272,6 +280,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
               visible={visible}
               newTab={newTab}
               selectedId={selectedId}
+              editing={editing}
               onEdit={onEdit}
               onRemove={onRemove}
               onAdd={onAdd}
@@ -302,6 +311,7 @@ export default function FolderTree({
   query = '',
   selectedId,
   newTab,
+  editing = false,
   onEdit,
   onRemove,
   onAdd,
@@ -314,6 +324,8 @@ export default function FolderTree({
   query?: string
   selectedId: string | null
   newTab: boolean
+  /** While true, every row's edit/delete buttons show without needing a hover. */
+  editing?: boolean
   onEdit: (node: BookmarkNode) => void
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
@@ -378,14 +390,21 @@ export default function FolderTree({
             {...rootDropProps}
             title="Drop here to move to top level"
             // z-index sits above the folder rows, which use `10 + level` —
-            // a deeply nested row must not paint over the pinned root.
-            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center gap-1 px-4 py-2.5 transition-colors ${
+            // a deeply nested row must not paint over the pinned root. Full
+            // width, matching the other rows (see their `mx-0 rounded-none`).
+            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pr-3 transition-colors ${
               rootDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
-            // Same backdrop as the folder rows (see `.folder-sticky` in
-            // index.css): opaque with glass off, blurred tint with it on.
-            style={{ backgroundColor: 'var(--sticky-row-bg)' }}
+            // Left padding matches a real folder row's own paddingLeft at
+            // level 0 (INDENT * 0 + 8 + 12, see the folder row below), and the
+            // spacer that follows matches TreeExpander's box (w-4 + mr-1) so
+            // the root's icon lines up with a folder row's icon exactly —
+            // folder rows always reserve that space for their chevron, even
+            // when they have no children. No `gap` here, same as the folder
+            // row: it relies purely on each child's own margin.
+            style={{ backgroundColor: 'var(--sticky-row-bg)', paddingLeft: 8 + 12 }}
           >
+            <span className="mr-1 h-4 w-4 shrink-0" />
             <RootIcon className="size-4 shrink-0 text-muted-foreground" />
             <span className="ml-1.5 flex-1 truncate text-sm font-medium">{rootLabel}</span>
             {onAddRoot && (
@@ -422,6 +441,7 @@ export default function FolderTree({
               visible={visible}
               newTab={newTab}
               selectedId={selectedId}
+              editing={editing}
               onEdit={onEdit}
               onRemove={onRemove}
               onAdd={onAdd}
