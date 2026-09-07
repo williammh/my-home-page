@@ -235,9 +235,12 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
               top: 0,
               zIndex: 10 + level,
               paddingLeft: level * INDENT + 8,
-              // Inline beats the `utilities` cascade layer, keeping the row
-              // opaque even when selected (see data-selected above).
-              backgroundColor: 'var(--card)',
+              // Inline beats the `utilities` cascade layer, keeping the row's
+              // own backdrop in place even when selected (see data-selected
+              // above). `--sticky-row-bg` is opaque with glass off and a
+              // translucent tint with it on — see index.css, where the matching
+              // backdrop-filter is applied.
+              backgroundColor: 'var(--sticky-row-bg)',
             }}
             {...(dragProps as DragHandlerProps)}
           >
@@ -304,6 +307,8 @@ export default function FolderTree({
   onAdd,
   onMove,
   onSelect,
+  rootLabel,
+  onAddRoot,
 }: {
   tree: BookmarkNode[]
   query?: string
@@ -314,6 +319,10 @@ export default function FolderTree({
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
   onMove: (id: string, targetId: string | null) => void
   onSelect: (id: string | null) => void
+  /** Name of the synthetic root row shown above the tree (e.g. "Bookmarks"). */
+  rootLabel?: string
+  /** Add a folder/link at the top level, from the root row's own buttons. */
+  onAddRoot?: (kind: 'folder' | 'link') => void
 }) {
   const trimmedQuery = query.trim()
   const visible = trimmedQuery ? matchIds(tree, trimmedQuery) : null
@@ -323,22 +332,8 @@ export default function FolderTree({
   const [dragging, setDragging] = useState<string | null>(null)  // id of the node being dragged
   const rootRef = useRef<HTMLDivElement>(null)
   useInnermostSticky(rootRef, [tree, trimmedQuery])
-
-  if (tree.length === 0) {
-    return (
-      <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
-        Nothing here yet — add a folder or a bookmark.
-      </p>
-    )
-  }
-
-  if (!hasResults) {
-    return (
-      <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
-        No folders or bookmarks match "{trimmedQuery}".
-      </p>
-    )
-  }
+  // Same resolver the real folder rows use, so the root reads as one of them.
+  const RootIcon = getIcon('folder')
 
   const rootDropProps = {
     onDragOver: (e: DragEvent) => {
@@ -371,25 +366,74 @@ export default function FolderTree({
       indent={INDENT}
       animateExpand={!trimmedQuery}
     >
-      <div ref={rootRef} {...rootDropProps} className="rounded-lg pb-3">
-        <TreeView className="px-0 pt-3">
-          <Nodes
-            nodes={tree}
-            level={0}
-            query={trimmedQuery}
-            visible={visible}
-            newTab={newTab}
-            selectedId={selectedId}
-            onEdit={onEdit}
-            onRemove={onRemove}
-            onAdd={onAdd}
-            onMove={onMove}
-            draggingId={dragging}
-            dragOverId={dragOverId}
-            setDragOverId={setDragOverId}
-            onDragging={setDragging}
-          />
-        </TreeView>
+      <div ref={rootRef} {...rootDropProps} className="flex min-h-full flex-col rounded-lg">
+        {rootLabel && (
+          // The synthetic root: named like a folder and pinned at the top of
+          // the panel, so the tree reads as living *inside* "Bookmarks"
+          // rather than under a heading floating outside the glass. It's also
+          // the drop target for "move to top level" — dragging onto the row
+          // that represents the root is the obvious gesture for it, so the
+          // separate drop strip below only appears as a fallback hint.
+          <div
+            {...rootDropProps}
+            title="Drop here to move to top level"
+            // z-index sits above the folder rows, which use `10 + level` —
+            // a deeply nested row must not paint over the pinned root.
+            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center gap-1 px-4 py-2.5 transition-colors ${
+              rootDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
+            }`}
+            // Same backdrop as the folder rows (see `.folder-sticky` in
+            // index.css): opaque with glass off, blurred tint with it on.
+            style={{ backgroundColor: 'var(--sticky-row-bg)' }}
+          >
+            <RootIcon className="size-4 shrink-0 text-muted-foreground" />
+            <span className="ml-1.5 flex-1 truncate text-sm font-medium">{rootLabel}</span>
+            {onAddRoot && (
+              <span className="ml-2 flex shrink-0 items-center gap-0.5">
+                <button
+                  title="New folder"
+                  className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
+                  onClick={() => onAddRoot('folder')}
+                ><FolderPlusIcon /></button>
+                <button
+                  title="New bookmark"
+                  className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
+                  onClick={() => onAddRoot('link')}
+                ><BookmarkSimpleIcon /></button>
+              </span>
+            )}
+          </div>
+        )}
+
+        {tree.length === 0 ? (
+          <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
+            Nothing here yet — add a folder or a bookmark.
+          </p>
+        ) : !hasResults ? (
+          <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
+            No folders or bookmarks match "{trimmedQuery}".
+          </p>
+        ) : (
+          <TreeView className="px-0 pt-2">
+            <Nodes
+              nodes={tree}
+              level={0}
+              query={trimmedQuery}
+              visible={visible}
+              newTab={newTab}
+              selectedId={selectedId}
+              onEdit={onEdit}
+              onRemove={onRemove}
+              onAdd={onAdd}
+              onMove={onMove}
+              draggingId={dragging}
+              dragOverId={dragOverId}
+              setDragOverId={setDragOverId}
+              onDragging={setDragging}
+            />
+          </TreeView>
+        )}
+
         {dragging !== null && (
           <div
             {...rootDropProps}
@@ -401,6 +445,7 @@ export default function FolderTree({
             Drop here to move to top level
           </div>
         )}
+
       </div>
     </TreeProvider>
   )

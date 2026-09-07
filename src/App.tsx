@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
-import { FolderPlusIcon, PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
-import { BookmarkSimpleIcon } from '@phosphor-icons/react'
+import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
@@ -163,13 +162,13 @@ export default function App() {
                 {!trimmedQuery && (
                   <Button
                     variant="glass"
-                    size="sm"
+                    size="icon-sm"
                     className="rounded-lg"
+                    title={editingShortcuts ? 'Done editing shortcuts' : 'Edit shortcuts'}
                     aria-pressed={editingShortcuts}
                     onClick={() => setEditingShortcuts((v) => !v)}
                   >
                     {editingShortcuts ? <CheckIcon /> : <PencilSquareIcon />}
-                    {editingShortcuts ? 'Done' : 'Edit Shortcuts'}
                   </Button>
                 )}
               </div>
@@ -207,34 +206,6 @@ export default function App() {
         </div>
 
         <section className="flex min-h-[320px] flex-1 flex-col">
-          <div className={`mb-3.5 flex shrink-0 flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
-            <h3 className={`text-xs font-semibold uppercase tracking-wider ${headlineCls(settings.textTheme)}`}>
-              Bookmarks
-            </h3>
-            <div className="h-px flex-1 bg-current opacity-15" />
-            <div className="flex flex-wrap gap-2">
-              <Button variant="glass" className="rounded-lg" onClick={() => setModal({ kind: 'folder', target: null })}>
-                <FolderPlusIcon />New Folder
-              </Button>
-              <Button variant="glass" className="rounded-lg" onClick={() => setModal({ kind: 'link', target: null })}>
-                <BookmarkSimpleIcon /> New Bookmark
-              </Button>
-              <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
-                <ArrowUpTrayIcon /> Import
-              </Button>
-              <Button variant="glass" className="rounded-lg" onClick={onExport}>
-                <ArrowDownTrayIcon /> Export
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json,.json"
-                onChange={onImportFile}
-                className="hidden"
-              />
-            </div>
-          </div>
-
           {note && (
             <div
               className={`mb-3 flex shrink-0 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs ${
@@ -255,7 +226,11 @@ export default function App() {
             </div>
           )}
 
-          <div className="glass glass-panel scroll-themed min-h-0 flex-1 overflow-y-auto rounded-lg px-3">
+          {/* The panel is the scroll container, and both the "Bookmarks" root
+              row and the import/export bar are sticky *inside* it — so they
+              stay put against the glass while the tree scrolls under them,
+              rather than sitting outside as separate page furniture. */}
+          <div className="glass glass-panel scroll-themed relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg px-3">
             {/* Vertical padding lives on the tree, not here: `p-3` on the
                 scroll container would offset sticky folder headers 12px down
                 from the visible top edge, leaving a gap for rows to scroll
@@ -270,7 +245,32 @@ export default function App() {
               onRemove={del}
               onAdd={(folder, kind) => setModal({ kind, target: folder.id })}
               onMove={moveNode}
+              rootLabel="Bookmarks"
+              onAddRoot={(kind) => setModal({ kind, target: null })}
             />
+            {/* A sibling of FolderTree, not nested inside it: FolderTree's
+                content sits in a vendored `w-full` (not full-height) wrapper,
+                so a footer placed inside it can't use `mt-auto` to reach the
+                panel's bottom when the tree is short — it would just sit
+                right after the last row. As a flex sibling of the whole
+                scroll panel (`flex flex-col` above), `mt-auto` here pushes
+                against the panel itself instead, and `sticky bottom-0` then
+                keeps it pinned once the tree grows past the panel's height. */}
+            <div className="sticky bottom-0 z-50 ml-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
+              <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
+                <ArrowUpTrayIcon /> Import
+              </Button>
+              <Button variant="glass" className="rounded-lg" onClick={onExport}>
+                <ArrowDownTrayIcon /> Export
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json,.json"
+                onChange={onImportFile}
+                className="hidden"
+              />
+            </div>
           </div>
         </section>
 

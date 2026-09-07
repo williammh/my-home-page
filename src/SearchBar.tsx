@@ -26,7 +26,7 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
         ref={ref}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Search shortcuts and bookmarks, or press /"
+        placeholder="Search bookmarks"
         spellCheck="false"
         autoComplete="off"
         className="glass glass-focus w-full rounded-lg py-[15px] pl-[50px] pr-11 text-base text-foreground placeholder:text-foreground/70 outline-none transition-[border-color,box-shadow,background-color] duration-150"

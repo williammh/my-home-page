@@ -47,7 +47,7 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
         type="button"
         title="Settings"
         onClick={onOpenSettings}
-        className="absolute -right-1 top-0 flex rounded-md p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-foreground/10 hover:text-foreground [&_svg]:size-4"
+        className="glass glass-hover absolute -right-1 top-0 flex rounded-md p-1.5 text-foreground transition-colors duration-150 [&_svg]:size-4"
       ><Cog6ToothIcon /></button>
 
       {/* Salutation — the one piece of the header that's about the reader, so

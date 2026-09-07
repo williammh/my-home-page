@@ -149,6 +149,14 @@
   --glass-tint-hover: oklch(1 0 0 / 76%);
   --glass-edge: oklch(1 0 0 / 55%);
   --glass-blur: 16px;
+  /* Backdrop for pinned rows. A pinned row has to separate itself from the
+     rows sliding underneath, but it sits on the glass panel and must still
+     show the page background through it — so the separation comes from the
+     blur, not from an opaque tint. The tint is only a light wash on top.
+     `--sticky-row-blur` is a whole filter value, not a length, so glass-off
+     can switch it to `none` and drop the compositing layer entirely. */
+  --sticky-row-bg: oklch(1 0 0 / 22%);
+  --sticky-row-blur: blur(20px) saturate(180%);
   /* Scrollbar thumb: a wash of --foreground, so it inverts with the theme on
      its own instead of needing a light and a dark color. */
   --scroll-thumb: oklch(from var(--foreground) l c h / 22%);
@@ -159,6 +167,7 @@
   --glass-tint: oklch(0.218 0.008 223.9 / 52%);
   --glass-tint-hover: oklch(0.275 0.011 216.9 / 68%);
   --glass-edge: oklch(1 0 0 / 14%);
+  --sticky-row-bg: oklch(0.218 0.008 223.9 / 30%);
   /* A light thumb on a dark panel needs more opacity than a dark one on a
      light panel to carry the same weight. */
   --scroll-thumb: oklch(from var(--foreground) l c h / 26%);
@@ -174,6 +183,10 @@
   --glass-tint-hover: var(--accent-bg);
   --glass-edge: var(--border);
   --glass-blur: 0px;
+  /* Fully opaque again, and no filter at all — a pinned row then hides the
+     rows underneath the way it did before the blur existed. */
+  --sticky-row-bg: var(--card);
+  --sticky-row-blur: none;
 }
 
 @layer components {
@@ -300,18 +313,20 @@
      and win — a bare `.folder-sticky` would lose and go see-through. */
   .glass-panel .folder-sticky,
   .glass-panel .folder-sticky:hover {
-    /* Opaque in every mode, glass effect on or off: `--glass-tint` is itself
-       translucent (62%/52%), so rows scrolling underneath a pinned header
-       would read through it. The glass panel behind already supplies the
-       see-through effect against the page background — the header only needs
-       to hide its own scrolling rows. */
-    background-color: var(--card);
+    /* The row's backdrop, set on the element inline as `--sticky-row-bg` (see
+       FolderTree.tsx) so it survives the `utilities` cascade layer. With glass
+       off this is the opaque card color; with it on, the translucent tint
+       below plus the backdrop-filter blurs the rows passing underneath instead
+       of hiding them outright. */
+    background-color: var(--sticky-row-bg);
+    -webkit-backdrop-filter: var(--sticky-row-blur);
+    backdrop-filter: var(--sticky-row-blur);
   }
 
   /* Hover and selection tints are translucent (see the .glass-panel rules
      above), which would make a pinned header see-through again. Layer the tint
-     as a gradient over the row's own opaque card background instead, so the
-     row keeps its feedback while staying solid. */
+     as a gradient over the row's own background instead, so the row keeps its
+     feedback without gaining a second opaque surface. */
   .glass-panel .folder-sticky:hover {
     background-image: linear-gradient(
       oklch(from var(--foreground) l c h / 8%) 0 100%
