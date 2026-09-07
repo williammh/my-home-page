@@ -17,6 +17,13 @@ export type TreeNode = FolderNode | LinkNode
 
 export interface Settings {
   name: string
+  /**
+   * BCP 47 tag, or 'system' to follow the browser's language setting.
+   *
+   * 'system' is the default and is stored as-is rather than resolved once at
+   * first load, so a user who changes their OS language sees the page follow.
+   */
+  locale: string
   timeZone: string
   dateFormat: string
   backgroundImage: string

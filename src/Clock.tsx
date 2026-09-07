@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Cog6ToothIcon } from '@heroicons/react/24/outline'
 import SplitFlapText from './components/SplitFlapText'
 import { greetingFor } from './Greeting'
-import { DATE_FORMATS, DEFAULT_DATE_FORMAT } from './dateFormats'
+import { dateFormatOptions } from './dateFormats'
+import { useI18n } from './i18n'
 import { headlineCls, headlineStrongCls } from './textTheme'
 import type { Settings } from './types'
 
@@ -15,21 +16,33 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
     return () => clearInterval(id)
   }, [])
 
-  const timeZone = settings.timeZone
-  const dateFormat = DATE_FORMATS[settings.dateFormat] ?? DATE_FORMATS[DEFAULT_DATE_FORMAT]
+  const { t, formatDate, formatDateParts, hour12, timeZoneName } = useI18n()
 
   // The meridiem is split off the flap board deliberately: it changes twice a
   // day, so flipping it alongside the seconds reads as noise, and as two more
   // tiles it made "AM"/"PM" look like part of the number. It's set as ordinary
   // sentence text below instead.
-  const clockParts = now.toLocaleTimeString('en-US', {
-    hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone,
-  }).split(' ')
-  const time = clockParts[0]
-  const meridiem = clockParts[1] ?? ''
-  const date = now.toLocaleDateString('en-US', { ...dateFormat.options, timeZone })
-  const tzLabel = (timeZone.split('/').pop() ?? timeZone).replace(/_/g, ' ')
-  const greeting = greetingFor(now, timeZone)
+  //
+  // Splitting on a space would only work for locales that separate the two
+  // that way; `formatToParts` names each field, so the digits and the meridiem
+  // are pulled out by type no matter how the locale arranges or punctuates
+  // them. `hour12` comes from the locale, so a 24-hour locale simply has no
+  // dayPeriod part and renders no meridiem.
+  const timeParts = formatDateParts(now, {
+    hour: 'numeric', minute: '2-digit', second: '2-digit', hour12,
+  })
+  const meridiem = timeParts.find((p) => p.type === 'dayPeriod')?.value ?? ''
+  // Everything except the meridiem (and the space that separates it) forms the
+  // flap board, so locale-specific separators — a dot rather than a colon, say
+  // — are preserved on the tiles.
+  const time = timeParts
+    .filter((p) => p.type !== 'dayPeriod')
+    .map((p) => p.value)
+    .join('')
+    .trim()
+
+  const date = formatDate(now, dateFormatOptions(settings.dateFormat))
+  const greeting = greetingFor(now, t, formatDateParts)
 
   // SplitFlapText animates between the two phrases in `words` — feed it
   // [previous tick, current tick] so each change flips instead of snapping,
@@ -45,16 +58,42 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
     <div className="relative mb-8">
       <button
         type="button"
-        title="Settings"
+        title={t.settings}
         onClick={onOpenSettings}
-        className="glass glass-hover absolute -right-1 top-0 flex rounded-md p-1.5 text-foreground transition-colors duration-150 [&_svg]:size-4"
+        className="glass glass-hover absolute -end-1 top-0 flex rounded-md p-1.5 text-foreground transition-colors duration-150 [&_svg]:size-4"
       ><Cog6ToothIcon /></button>
 
       {/* Salutation — the one piece of the header that's about the reader, so
           it carries the weight; the clock sentence underneath is supporting. */}
       <h1 className={`text-[clamp(28px,5vw,44px)] font-semibold leading-[1.1] tracking-tight ${headlineStrongCls(settings.textTheme)}`}>
-        {greeting}
-        {name ? <>, <span className="font-normal">{name}</span></> : null}.
+        {/* Whole-sentence salutation from the catalog: a language that needs
+            the name first, or different punctuation, changes only its own
+            message rather than this markup. The name is emphasized by
+            splitting the rendered sentence on it.
+
+            `lastIndexOf`, not `indexOf`: a name that also occurs in the
+            greeting — "Good", say — would otherwise match the greeting's copy
+            and emphasize that instead, rendering "*Good* morning, Good." The
+            name is the last thing every catalog interpolates, so searching
+            from the end finds the right occurrence. */}
+        {name ? (
+          (() => {
+            const sentence = t.salutationNamed(greeting, name)
+            const at = sentence.lastIndexOf(name)
+            // -1 only if a catalog dropped the name from its sentence; render
+            // it whole rather than losing the salutation entirely.
+            if (at === -1) return sentence
+            return (
+              <>
+                {sentence.slice(0, at)}
+                <span className="font-normal">{name}</span>
+                {sentence.slice(at + name.length)}
+              </>
+            )
+          })()
+        ) : (
+          t.salutation(greeting)
+        )}
       </h1>
 
       {/* "It is {date} {time} in {timezone}." — one sentence, with the flip
@@ -63,7 +102,7 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
           on the text baseline and lets the sentence wrap on narrow screens
           without the tiles overflowing. */}
       <p className={`mt-2.5 flex flex-wrap items-baseline gap-x-[0.4em] gap-y-1.5 text-[clamp(13px,1.7vw,17px)] leading-snug ${headlineCls(settings.textTheme)}`}>
-        <span>It is {date}</span>
+        <span>{t.clockBefore(date)}</span>
         <SplitFlapText
           words={words}
           loop={false}
@@ -79,7 +118,7 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
           gap={0}
           fontSize="1em"
         />
-        <span className="-ml-[0.15em]">{meridiem && `${meridiem} `}in {tzLabel}.</span>
+        <span className="-ms-[0.15em]">{t.clockAfter(meridiem, timeZoneName)}</span>
       </p>
     </div>
   )

@@ -1,0 +1,90 @@
+import type { Messages } from './en'
+
+const ja: Messages = {
+  greetingNight: 'おやすみなさい',
+  greetingMorning: 'おはようございます',
+  greetingAfternoon: 'こんにちは',
+  greetingEvening: 'こんばんは',
+
+  // Japanese uses a full-width comma and no sentence period after a name.
+  salutation: (greeting) => `${greeting}。`,
+  salutationNamed: (greeting, name) => `${greeting}、${name}さん。`,
+
+  // Japanese puts the place before the time: "東京は 2026年1月16日 6:45:12 です。"
+  // The zone therefore belongs in `clockBefore`, and only the copula follows
+  // the flip tiles.
+  clockBefore: (date) => `${date}`,
+  clockAfter: (meridiem, zone) => `${meridiem ? `${meridiem} ` : ''}（${zone}）です。`,
+
+  shortcuts: 'ショートカット',
+  bookmarks: 'ブックマーク',
+  searchPlaceholder: 'ブックマークを検索',
+  clear: 'クリア',
+
+  settings: '設定',
+  edit: '編集',
+  rename: '名前を変更',
+  delete: '削除',
+  cancel: 'キャンセル',
+  save: '保存',
+  dismiss: '閉じる',
+  import: 'インポート',
+  export: 'エクスポート',
+  addShortcut: 'ショートカットを追加',
+  addFolder: 'フォルダを追加',
+  addLink: 'リンクを追加',
+  newFolder: '新しいフォルダ',
+  newBookmark: '新しいブックマーク',
+  editShortcuts: 'ショートカットとブックマークを編集',
+  doneEditingShortcuts: '編集を終了',
+  dropToTopLevel: 'ここにドロップして最上位に移動',
+  treeEmpty: 'まだ何もありません。フォルダかブックマークを追加してください。',
+  treeNoMatches: (query) => `「${query}」に一致するフォルダやブックマークはありません。`,
+
+  // Japanese has no plural inflection — one form covers every count.
+  importedItems: (n) => `${n} 件をインポートしました。`,
+  exportedItems: (n) => `${n} 件をエクスポートしました。`,
+  importEmpty: 'そのファイルにブックマークやフォルダは見つかりませんでした。',
+  importInvalid: 'そのファイルは有効な JSON ではありません。',
+  exportEmpty: 'エクスポートできるものがまだありません。',
+
+  editFolder: 'フォルダを編集',
+  editLink: 'リンクを編集',
+  newLink: '新しいリンク',
+  fieldName: '名前',
+  fieldOptional: '(任意)',
+  fieldIcon: 'アイコン',
+  fieldUrl: 'URL',
+  folderNamePlaceholder: '仕事',
+  urlPlaceholder: 'example.com',
+  linkNamePlaceholder: 'URL から自動設定',
+  untitledFolder: '無題のフォルダ',
+
+  fieldYourName: 'お名前',
+  fieldLanguage: '言語',
+  fieldTimeZone: 'タイムゾーン',
+  fieldDateFormat: '日付の形式',
+  fieldTextColor: '文字の色',
+  fieldGlass: 'すりガラス効果',
+  fieldOpenLinksIn: 'リンクを開く場所',
+  fieldBackground: '背景',
+  languageSystem: (language) => `システムの既定 (${language})`,
+  textLight: 'ライト',
+  textDark: 'ダーク',
+  on: 'オン',
+  off: 'オフ',
+  sameTab: '同じタブ',
+  newTab: '新しいタブ',
+  backgroundNone: 'なし',
+  backgroundImage: '画像',
+  backgroundColor: '色',
+  glassHint: '時計・検索バー・ブックマークに半透明のぼかし効果を適用します。',
+  openLinksHint: 'ショートカットとブックマークに適用されます。Ctrl / Cmd クリック (または中クリック) では逆の動作になります。',
+  chooseFromDevice: 'デバイスから選択',
+  imageSelected: 'このデバイスから画像を選択しました',
+  imageUrlPlaceholder: 'https://example.com/image.jpg',
+  imageTooLarge: '画像が大きすぎます (最大 3 MB)。',
+  resetToDefaults: '既定値に戻す',
+}
+
+export default ja

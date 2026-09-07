@@ -14,6 +14,7 @@ export const DEFAULT_BACKGROUND_COLOR = '#090b0c'
 
 export const DEFAULT_SETTINGS: Settings = {
   name: '',
+  locale: 'system',
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   dateFormat: 'long',
   backgroundImage: '',

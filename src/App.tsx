@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
-import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
@@ -7,6 +7,7 @@ import FolderTree from './FolderTree'
 import { FolderModal, LinkModal, SettingsModal } from './Modal'
 import { Button } from '@/components/ui/button'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
+import { I18nProvider, useI18n } from './i18n'
 import { headlineCls } from './textTheme'
 import type { FolderNode, LinkNode, Settings } from './types'
 
@@ -23,21 +24,39 @@ type Modal =
   | { kind: 'link'; node?: LinkNode; target?: string | null; isShortcut?: boolean }
   | { kind: 'settings' }
 
+/**
+ * Settings are read here and handed to the provider, so `AppBody` — and every
+ * component under it — can call `useI18n`. The provider has to sit above the
+ * consumers, and settings are what it's configured from, hence the split.
+ */
 export default function App() {
+  const { settings, updateSettings } = useSettings()
+
+  return (
+    <I18nProvider locale={settings.locale} timeZone={settings.timeZone}>
+      <AppBody settings={settings} updateSettings={updateSettings} />
+    </I18nProvider>
+  )
+}
+
+function AppBody({
+  settings,
+  updateSettings,
+}: {
+  settings: Settings
+  updateSettings: (patch: Partial<Settings>) => void
+}) {
+  const { t } = useI18n()
   const { tree, addNode, removeNode, updateNode, moveNode, importNodes } = useTree()
   const { shortcuts, addShortcut, removeShortcut, updateShortcut } = useShortcuts()
-  const { settings, updateSettings } = useSettings()
   const [selectedId, setSelectedId] = useState<string | null>(null)  // folder highlighted in the tree
   const [modal, setModal] = useState<Modal | null>(null)
   const [query, setQuery] = useState('')
-  // Toggled by "Edit Shortcuts": while on, every shortcut card shows its
-  // edit/delete buttons without needing a hover, for touch screens and for
-  // seeing the whole grid's controls at once.
+  // Toggled by "Edit Shortcuts": while on, every shortcut card and every
+  // bookmarks folder/link row shows its edit/delete buttons without needing
+  // a hover, for touch screens and for seeing the whole grid's controls at
+  // once.
   const [editingShortcuts, setEditingShortcuts] = useState(false)
-  // Toggled by the bookmarks panel's own edit button: while on, every
-  // folder/link row shows its edit/delete buttons without needing a hover,
-  // mirroring "Edit Shortcuts" above.
-  const [editingBookmarks, setEditingBookmarks] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -94,14 +113,14 @@ export default function App() {
     try {
       const nodes = parseImportedTree(await file.text())
       if (nodes.length === 0) {
-        setNote({ ok: false, text: 'No bookmarks or folders found in that file.' })
+        setNote({ ok: false, text: t.importEmpty })
         return
       }
       importNodes(nodes)
       const n = countNodes(nodes)
-      setNote({ ok: true, text: `Imported ${n} item${n === 1 ? '' : 's'}.` })
+      setNote({ ok: true, text: t.importedItems(n) })
     } catch {
-      setNote({ ok: false, text: "That file isn't valid JSON." })
+      setNote({ ok: false, text: t.importInvalid })
     }
   }
 
@@ -111,7 +130,7 @@ export default function App() {
   // what's on screen.
   const onExport = () => {
     if (tree.length === 0) {
-      setNote({ ok: false, text: 'Nothing to export yet.' })
+      setNote({ ok: false, text: t.exportEmpty })
       return
     }
 
@@ -129,7 +148,7 @@ export default function App() {
     setTimeout(() => URL.revokeObjectURL(url), 10_000)
 
     const n = countNodes(tree)
-    setNote({ ok: true, text: `Exported ${n} item${n === 1 ? '' : 's'}.` })
+    setNote({ ok: true, text: t.exportedItems(n) })
   }
 
   return (
@@ -156,7 +175,7 @@ export default function App() {
             <section className="mb-5">
               <div className={`mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
                 <h3 className={`text-xs font-semibold uppercase tracking-wider ${headlineCls(settings.textTheme)}`}>
-                  Shortcuts
+                  {t.shortcuts}
                 </h3>
                 {/* A hairline running from the label to the actions ties the
                     two ends of the row together, so the button doesn't read as
@@ -167,7 +186,7 @@ export default function App() {
                     variant="glass"
                     size="icon-sm"
                     className="rounded-lg"
-                    title={editingShortcuts ? 'Done editing shortcuts' : 'Edit shortcuts'}
+                    title={editingShortcuts ? t.doneEditingShortcuts : t.editShortcuts}
                     aria-pressed={editingShortcuts}
                     onClick={() => setEditingShortcuts((v) => !v)}
                   >
@@ -191,7 +210,7 @@ export default function App() {
                 {editingShortcuts && !trimmedQuery && (
                   <button
                     type="button"
-                    title="Add shortcut"
+                    title={t.addShortcut}
                     onClick={() => setModal({ kind: 'link', isShortcut: true })}
                     className="flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-current/25 px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-colors duration-150 hover:border-current/40 hover:bg-foreground/5 max-[520px]:min-h-[86px] max-[520px]:gap-1.5 max-[520px]:px-1 max-[520px]:pb-2.5 max-[520px]:pt-3"
                   >
@@ -199,7 +218,7 @@ export default function App() {
                       <PlusIcon className="size-5" />
                     </div>
                     <span className="line-clamp-2 max-w-full text-center text-[12.5px] leading-tight max-[520px]:text-[11px]">
-                      Add Shortcut
+                      {t.addShortcut}
                     </span>
                   </button>
                 )}
@@ -222,11 +241,11 @@ export default function App() {
               <span>{note.text}</span>
               <button
                 type="button"
-                title="Dismiss"
+                title={t.dismiss}
                 className="shrink-0 rounded-md px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
                 onClick={() => setNote(null)}
               >
-                Dismiss
+                {t.dismiss}
               </button>
             </div>
           )}
@@ -245,13 +264,13 @@ export default function App() {
               query={query}
               selectedId={selectedId}
               newTab={settings.openInNewTab}
-              editing={editingBookmarks}
+              editing={editingShortcuts}
               onSelect={setSelectedId}
               onEdit={(node) => (node.type === 'folder' ? setModal({ kind: 'folder', node }) : setModal({ kind: 'link', node }))}
               onRemove={del}
               onAdd={(folder, kind) => setModal({ kind, target: folder.id })}
               onMove={moveNode}
-              rootLabel="Bookmarks"
+              rootLabel={t.bookmarks}
               onAddRoot={(kind) => setModal({ kind, target: null })}
             />
             {/* A sibling of FolderTree, not nested inside it: FolderTree's
@@ -262,21 +281,12 @@ export default function App() {
                 scroll panel (`flex flex-col` above), `mt-auto` here pushes
                 against the panel itself instead, and `sticky bottom-0` then
                 keeps it pinned once the tree grows past the panel's height. */}
-            <div className="sticky bottom-0 z-50 ml-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
-              <Button
-                variant="glass"
-                className="rounded-lg"
-                title={editingBookmarks ? 'Done editing bookmarks' : 'Edit bookmarks'}
-                aria-pressed={editingBookmarks}
-                onClick={() => setEditingBookmarks((v) => !v)}
-              >
-                {editingBookmarks ? <CheckIcon /> : <PencilIcon />} Edit
-              </Button>
+            <div className="sticky bottom-0 z-50 ms-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
               <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
-                <ArrowUpTrayIcon /> Import
+                <ArrowUpTrayIcon /> {t.import}
               </Button>
               <Button variant="glass" className="rounded-lg" onClick={onExport}>
-                <ArrowDownTrayIcon /> Export
+                <ArrowDownTrayIcon /> {t.export}
               </Button>
               <input
                 ref={fileInputRef}

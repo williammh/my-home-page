@@ -237,14 +237,20 @@
   /* Rows inside the glass bookmarks panel. The vendored tree component uses
      `bg-accent/50` and `bg-accent/80`, which are opaque enough to read as
      solid patches sitting on the glass rather than part of it. Overriding
-     from the panel keeps the vendored component untouched. */
-  .glass-panel :where(.group[class*="hover:bg-accent"]:hover),
-  .glass-panel :where(a.group:hover) {
-    background-color: oklch(from var(--foreground) l c h / 8%);
-  }
-
-  .glass-panel :where([class*="bg-accent/80"]) {
-    background-color: oklch(from var(--foreground) l c h / 12%);
+     from the panel keeps the vendored component untouched.
+     Folder rows (the `TreeNodeTrigger` div) get the same tint as bookmark
+     rows on hover *and* when selected, so a folder never reads darker than a
+     bookmark — see the stuck-row backdrop further down for the one case
+     (actually pinned at the panel top) that still needs full opacity.
+     `!important`: Tailwind v4 fixes layer order as theme, base, components,
+     utilities regardless of where in the source each `@layer` block appears,
+     so `bg-accent/50`/`bg-accent/80` (utilities) always beats a `components`
+     rule no matter its specificity — `!important` is the only way to win. */
+  .glass-panel :where(a.group[class*="hover:bg-accent"]:hover),
+  .glass-panel :where(a.group:hover),
+  .glass-panel :where(div.group[class*="hover:bg-accent"]:hover),
+  .glass-panel :where(div.group[class*="bg-accent/80"]) {
+    background-color: oklch(from var(--foreground) l c h / 8%) !important;
   }
 }
 
@@ -303,39 +309,29 @@
 /* ---------------------------------------------------------------------------
    Sticky folder headers
    ---------------------------------------------------------------------------
-   A folder row stays pinned while its contents scroll past. Because the row
-   would otherwise be transparent, rows scrolling underneath would show through
-   it, so give it the panel's own backdrop. */
+   A folder row only needs the panel's own opaque backdrop while it's actually
+   pinned at the top and has content scrolling underneath it — hover and
+   selection get the same translucent tint as a bookmark row instead (see the
+   `.glass-panel` rules above), so a folder never reads darker than a
+   bookmark. The synthetic root row is permanently pinned, so it always needs
+   the opaque backdrop; nested folder rows are only pinned intermittently,
+   flagged by `data-stuck` from `useInnermostSticky` in FolderTree.tsx. */
 @layer components {
-  /* `.glass-panel :where(...)` above re-tints rows translucently on hover at
-     specificity 0-2-0. `:where()` contributes nothing, so these selectors keep
-     `.folder-sticky` outside it to reach 0-2-0 (0-3-0 for the attribute one)
-     and win — a bare `.folder-sticky` would lose and go see-through. */
-  .glass-panel .folder-sticky,
-  .glass-panel .folder-sticky:hover {
-    /* The row's backdrop, set on the element inline as `--sticky-row-bg` (see
-       FolderTree.tsx) so it survives the `utilities` cascade layer. With glass
-       off this is the opaque card color; with it on, the translucent tint
-       below plus the backdrop-filter blurs the rows passing underneath instead
-       of hiding them outright. */
-    background-color: var(--sticky-row-bg);
+  /* The `!important` tint above would otherwise win over this too (both are
+     `components`-layer, but that rule declares `!important`), so this one
+     needs it as well to stay opaque when a stuck row is also hovered or
+     selected. */
+  .glass-panel .folder-sticky[data-stuck],
+  .glass-panel .folder-sticky[data-stuck]:hover,
+  .glass-panel .folder-sticky[data-stuck][data-selected] {
+    /* The row's backdrop. With glass off this is the opaque card color; with
+       it on, the translucent tint below plus the backdrop-filter blurs the
+       rows passing underneath instead of hiding them outright. */
+    background-color: var(--sticky-row-bg) !important;
     -webkit-backdrop-filter: var(--sticky-row-blur);
     backdrop-filter: var(--sticky-row-blur);
   }
 
-  /* Hover and selection tints are translucent (see the .glass-panel rules
-     above), which would make a pinned header see-through again. Layer the tint
-     as a gradient over the row's own background instead, so the row keeps its
-     feedback without gaining a second opaque surface. */
-  .glass-panel .folder-sticky:hover {
-    background-image: linear-gradient(
-      oklch(from var(--foreground) l c h / 8%) 0 100%
-    );
-  }
-
-  .glass-panel .folder-sticky[data-selected] {
-    background-image: linear-gradient(
-      oklch(from var(--foreground) l c h / 12%) 0 100%
-    );
-  }
+  /* The root row (see FolderTree.tsx) sets this backdrop inline instead,
+     since it's permanently pinned rather than intermittently stuck. */
 }

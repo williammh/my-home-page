@@ -1,8 +1,9 @@
 import { useState, useEffect, type ReactNode, type ChangeEvent, type FormEvent } from 'react'
 import { ICON_KEYS, getIcon } from './icons'
 import { Button } from '@/components/ui/button'
-import { DATE_FORMATS } from './dateFormats'
+import { DATE_FORMAT_KEYS, dateFormatOptions } from './dateFormats'
 import { DEFAULT_SETTINGS } from './store'
+import { LOCALES, detectLocale, localeMeta, useI18n } from './i18n'
 import type { FolderNode, LinkNode, Settings } from './types'
 
 const TIME_ZONES = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : []
@@ -39,6 +40,7 @@ export function FolderModal({
   onSave: (data: { name: string; icon: string }) => void
   onClose: () => void
 }) {
+  const { t } = useI18n()
   const [name, setName] = useState(initial?.name ?? '')
   const [icon, setIcon] = useState(initial?.icon ?? 'folder')
 
@@ -49,12 +51,12 @@ export function FolderModal({
   }
 
   return (
-    <Shell title={initial ? 'Edit folder' : 'New folder'} onClose={onClose}>
+    <Shell title={initial ? t.editFolder : t.newFolder} onClose={onClose}>
       <form onSubmit={save}>
-        <label className={labelCls}>Name</label>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Work" className={inputCls} />
+        <label className={labelCls}>{t.fieldName}</label>
+        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t.folderNamePlaceholder} className={inputCls} />
 
-        <label className={labelCls}>Icon</label>
+        <label className={labelCls}>{t.fieldIcon}</label>
         <div className="grid grid-cols-8 gap-1.5 max-[520px]:grid-cols-6">
           {ICON_KEYS.map((k) => {
             const I = getIcon(k)
@@ -76,8 +78,8 @@ export function FolderModal({
         </div>
 
         <div className="mt-[22px] flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit">Save</Button>
+          <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
+          <Button type="submit">{t.save}</Button>
         </div>
       </form>
     </Shell>
@@ -103,7 +105,9 @@ export function SettingsModal({
   onSave: (data: Settings) => void
   onClose: () => void
 }) {
+  const { t, formatDate } = useI18n()
   const [name, setName] = useState(initial.name ?? '')
+  const [locale, setLocale] = useState(initial.locale ?? 'system')
   const [timeZone, setTimeZone] = useState(initial.timeZone)
   const [dateFormat, setDateFormat] = useState(initial.dateFormat)
   const [textTheme, setTextTheme] = useState<'light' | 'dark'>(initial.textTheme ?? 'light')
@@ -122,6 +126,7 @@ export function SettingsModal({
     e.preventDefault()
     onSave({
       name: name.trim(),
+      locale,
       timeZone,
       dateFormat,
       textTheme,
@@ -137,7 +142,7 @@ export function SettingsModal({
     e.target.value = ''
     if (!file) return
     if (file.size > MAX_BACKGROUND_FILE_BYTES) {
-      setFileError('Image is too large (max 3MB).')
+      setFileError(t.imageTooLarge)
       return
     }
     setFileError('')
@@ -148,6 +153,7 @@ export function SettingsModal({
 
   const resetToDefaults = () => {
     setName(DEFAULT_SETTINGS.name)
+    setLocale(DEFAULT_SETTINGS.locale)
     setTimeZone(DEFAULT_SETTINGS.timeZone)
     setDateFormat(DEFAULT_SETTINGS.dateFormat)
     setTextTheme(DEFAULT_SETTINGS.textTheme)
@@ -160,12 +166,30 @@ export function SettingsModal({
   }
 
   return (
-    <Shell title="Settings" onClose={onClose}>
+    <Shell title={t.settings} onClose={onClose}>
       <form onSubmit={save}>
-        <label className={labelCls}>Name <span className="font-normal normal-case tracking-normal opacity-70">(optional)</span></label>
-        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" className={inputCls} />
+        <label className={labelCls}>{t.fieldName} <span className="font-normal normal-case tracking-normal opacity-70">{t.fieldOptional}</span></label>
+        <input autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder={t.fieldYourName} className={inputCls} />
 
-        <label className={labelCls}>Time zone</label>
+        <label className={labelCls}>{t.fieldLanguage}</label>
+        <select
+          value={locale}
+          onChange={(e) => setLocale(e.target.value)}
+          className={inputCls}
+        >
+          {/* 'system' rather than a resolved tag, so the page keeps following
+              the browser if its language later changes. The detected language
+              is named in the label so the choice isn't opaque. */}
+          <option value="system">{t.languageSystem(localeMeta(detectLocale()).endonym)}</option>
+          {/* Each language is listed in its own script, and `lang`/`dir` are
+              set per option so an RTL name renders correctly inside an
+              otherwise LTR menu. */}
+          {LOCALES.map((l) => (
+            <option key={l.tag} value={l.tag} lang={l.tag} dir={l.dir}>{l.endonym}</option>
+          ))}
+        </select>
+
+        <label className={labelCls}>{t.fieldTimeZone}</label>
         <select
           value={timeZone}
           onChange={(e) => setTimeZone(e.target.value)}
@@ -175,46 +199,49 @@ export function SettingsModal({
           {TIME_ZONES.map((tz) => <option key={tz} value={tz}>{tz}</option>)}
         </select>
 
-        <label className={labelCls}>Date format</label>
+        <label className={labelCls}>{t.fieldDateFormat}</label>
         <select
           value={dateFormat}
           onChange={(e) => setDateFormat(e.target.value)}
           className={inputCls}
         >
-          {Object.entries(DATE_FORMATS).map(([key, { label }]) => (
-            <option key={key} value={key}>{label}</option>
+          {/* Each option previews today's date in that preset, in the current
+              locale — a fixed English sample ("1/1/2026") would misdescribe
+              what the option actually does for most languages. */}
+          {DATE_FORMAT_KEYS.map((key) => (
+            <option key={key} value={key}>{formatDate(new Date(), dateFormatOptions(key))}</option>
           ))}
         </select>
 
-        <label className={labelCls}>Text color</label>
+        <label className={labelCls}>{t.fieldTextColor}</label>
         <div className={segmentedCls}>
-          <button type="button" className={segmentBtnCls(textTheme === 'light')} onClick={() => setTextTheme('light')}>Light</button>
-          <button type="button" className={segmentBtnCls(textTheme === 'dark')} onClick={() => setTextTheme('dark')}>Dark</button>
+          <button type="button" className={segmentBtnCls(textTheme === 'light')} onClick={() => setTextTheme('light')}>{t.textLight}</button>
+          <button type="button" className={segmentBtnCls(textTheme === 'dark')} onClick={() => setTextTheme('dark')}>{t.textDark}</button>
         </div>
 
-        <label className={labelCls}>Glass effect</label>
+        <label className={labelCls}>{t.fieldGlass}</label>
         <div className={segmentedCls}>
-          <button type="button" className={segmentBtnCls(glass)} onClick={() => setGlass(true)}>On</button>
-          <button type="button" className={segmentBtnCls(!glass)} onClick={() => setGlass(false)}>Off</button>
-        </div>
-        <p className="mt-1.5 text-xs text-muted-foreground">
-          Translucent, blurred surfaces for the clock, search bar and bookmarks.
-        </p>
-
-        <label className={labelCls}>Open links in</label>
-        <div className={segmentedCls}>
-          <button type="button" className={segmentBtnCls(!openInNewTab)} onClick={() => setOpenInNewTab(false)}>Same tab</button>
-          <button type="button" className={segmentBtnCls(openInNewTab)} onClick={() => setOpenInNewTab(true)}>New tab</button>
+          <button type="button" className={segmentBtnCls(glass)} onClick={() => setGlass(true)}>{t.on}</button>
+          <button type="button" className={segmentBtnCls(!glass)} onClick={() => setGlass(false)}>{t.off}</button>
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">
-          Applies to shortcuts and bookmarks. Ctrl/Cmd-click (or middle-click) still does the opposite.
+          {t.glassHint}
         </p>
 
-        <label className={labelCls}>Background</label>
+        <label className={labelCls}>{t.fieldOpenLinksIn}</label>
         <div className={segmentedCls}>
-          <button type="button" className={segmentBtnCls(backgroundType === 'none')} onClick={() => setBackgroundType('none')}>None</button>
-          <button type="button" className={segmentBtnCls(backgroundType === 'image')} onClick={() => setBackgroundType('image')}>Image</button>
-          <button type="button" className={segmentBtnCls(backgroundType === 'color')} onClick={() => setBackgroundType('color')}>Color</button>
+          <button type="button" className={segmentBtnCls(!openInNewTab)} onClick={() => setOpenInNewTab(false)}>{t.sameTab}</button>
+          <button type="button" className={segmentBtnCls(openInNewTab)} onClick={() => setOpenInNewTab(true)}>{t.newTab}</button>
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">
+          {t.openLinksHint}
+        </p>
+
+        <label className={labelCls}>{t.fieldBackground}</label>
+        <div className={segmentedCls}>
+          <button type="button" className={segmentBtnCls(backgroundType === 'none')} onClick={() => setBackgroundType('none')}>{t.backgroundNone}</button>
+          <button type="button" className={segmentBtnCls(backgroundType === 'image')} onClick={() => setBackgroundType('image')}>{t.backgroundImage}</button>
+          <button type="button" className={segmentBtnCls(backgroundType === 'color')} onClick={() => setBackgroundType('color')}>{t.backgroundColor}</button>
         </div>
 
         {backgroundType === 'image' && (
@@ -222,17 +249,17 @@ export function SettingsModal({
             <input
               value={backgroundImage.startsWith('data:') ? '' : backgroundImage}
               onChange={(e) => setBackgroundImage(e.target.value)}
-              placeholder={backgroundImage.startsWith('data:') ? 'Image selected from this device' : 'https://example.com/image.jpg'}
+              placeholder={backgroundImage.startsWith('data:') ? t.imageSelected : t.imageUrlPlaceholder}
               spellCheck="false"
               className={inputCls}
             />
             <div className="mt-2 flex items-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('background-file-input')?.click()}>
-                Choose from device
+                {t.chooseFromDevice}
               </Button>
               {backgroundImage && (
                 <Button type="button" variant="outline" size="sm" onClick={() => setBackgroundImage('')}>
-                  Clear
+                  {t.clear}
                 </Button>
               )}
               <input id="background-file-input" type="file" accept="image/*" onChange={onFile} className="hidden" />
@@ -266,10 +293,10 @@ export function SettingsModal({
         )}
 
         <div className="mt-[22px] flex items-center justify-between gap-2">
-          <Button type="button" variant="ghost" onClick={resetToDefaults}>Reset to defaults</Button>
+          <Button type="button" variant="ghost" onClick={resetToDefaults}>{t.resetToDefaults}</Button>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit">Save</Button>
+            <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
+            <Button type="submit">{t.save}</Button>
           </div>
         </div>
       </form>
@@ -286,6 +313,7 @@ export function LinkModal({
   onSave: (data: { name: string; url: string }) => void
   onClose: () => void
 }) {
+  const { t } = useI18n()
   const [name, setName] = useState(initial?.name ?? '')
   const [url, setUrl] = useState(initial?.url ?? '')
 
@@ -299,17 +327,17 @@ export function LinkModal({
   }
 
   return (
-    <Shell title={initial ? 'Edit link' : 'New link'} onClose={onClose}>
+    <Shell title={initial ? t.editLink : t.newLink} onClose={onClose}>
       <form onSubmit={save}>
-        <label className={labelCls}>URL</label>
-        <input autoFocus value={url} onChange={(e) => setUrl(e.target.value)} placeholder="example.com" spellCheck="false" className={inputCls} />
+        <label className={labelCls}>{t.fieldUrl}</label>
+        <input autoFocus value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t.urlPlaceholder} spellCheck="false" className={inputCls} />
 
-        <label className={labelCls}>Name <span className="font-normal normal-case tracking-normal opacity-70">(optional)</span></label>
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Auto from URL" className={inputCls} />
+        <label className={labelCls}>{t.fieldName} <span className="font-normal normal-case tracking-normal opacity-70">{t.fieldOptional}</span></label>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t.linkNamePlaceholder} className={inputCls} />
 
         <div className="mt-[22px] flex justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit">Save</Button>
+          <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
+          <Button type="submit">{t.save}</Button>
         </div>
       </form>
     </Shell>

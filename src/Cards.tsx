@@ -1,5 +1,6 @@
 import { TrashIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Highlighted } from './highlight'
+import { useI18n } from './i18n'
 import type { LinkNode } from './types'
 
 const favicon = (url: string) => {
@@ -41,6 +42,7 @@ export function LinkCard({
   onEdit: (node: LinkNode) => void
   onRemove: (id: string) => void
 }) {
+  const { t } = useI18n()
   const src = favicon(node.url)
   return (
     // `noreferrer` implies `noopener`, but both are spelled out: the opened
@@ -61,17 +63,17 @@ export function LinkCard({
       </span>
       {editable && (
         <span
-          className={`absolute right-[5px] top-[5px] flex gap-0.5 transition-opacity duration-150 group-hover:opacity-100 ${
+          className={`absolute end-[5px] top-[5px] flex gap-0.5 transition-opacity duration-150 group-hover:opacity-100 ${
             editing ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <button
-            title="Edit"
+            title={t.edit}
             className="flex rounded-md bg-foreground/10 p-1 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
             onClick={(e) => { e.preventDefault(); onEdit(node) }}
           ><PencilIcon /></button>
           <button
-            title="Delete"
+            title={t.delete}
             className="flex rounded-md bg-foreground/10 p-1 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
             onClick={(e) => { e.preventDefault(); onRemove(node.id) }}
           ><TrashIcon /></button>

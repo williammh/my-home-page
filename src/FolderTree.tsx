@@ -3,6 +3,7 @@ import { getIcon } from './icons'
 import { FolderPlusIcon, PencilIcon, TrashIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
+import { useI18n } from './i18n'
 import {
   TreeProvider, TreeView, TreeNode, TreeNodeTrigger, TreeNodeContent,
   TreeExpander, TreeIcon, TreeLabel, TreeLines,
@@ -78,8 +79,13 @@ function useInnermostSticky(scrollRef: RefObject<HTMLDivElement | null>, deps: u
 
       // Only that row sticks. Losers need an explicit `static`: clearing the
       // inline style would fall back to the `sticky` class and re-pin them.
-      for (let i = 0; i < rows.length; i++)
+      // `data-stuck` drives the row's backdrop (see index.css) — only the row
+      // actually pinned at top needs to hide content scrolling under it, so
+      // folder rows in normal flow stay transparent like bookmark rows.
+      for (let i = 0; i < rows.length; i++) {
         rows[i].style.position = i === winner ? 'sticky' : 'static'
+        rows[i].toggleAttribute('data-stuck', i === winner)
+      }
     }
 
     sync()
@@ -108,6 +114,7 @@ function Row({
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
 }) {
+  const { t } = useI18n()
   const folderNode = node.type === 'folder' ? node : null
   const isFolder = folderNode !== null
   const hasChildren = isFolder && folderNode.children.length > 0
@@ -119,28 +126,28 @@ function Row({
       <TreeIcon icon={<Icon className="size-4" />} hasChildren={hasChildren} />
       <TreeLabel><Highlighted text={node.name} query={query} /></TreeLabel>
       {folderNode && (
-        <span className="ml-2 flex shrink-0 items-center gap-0.5">
+        <span className="ms-2 flex shrink-0 items-center gap-0.5">
           <button
-            title="Add folder"
+            title={t.addFolder}
             className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
           ><FolderPlusIcon /></button>
           <button
-            title="Add link"
+            title={t.addLink}
             className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
           ><BookmarkSimpleIcon /></button>
         </span>
       )}
       {editing && (
-        <span className="ml-2 flex shrink-0 items-center gap-0.5">
+        <span className="ms-2 flex shrink-0 items-center gap-0.5">
           <button
-            title={isFolder ? 'Rename' : 'Edit'}
+            title={isFolder ? t.rename : t.edit}
             className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(node) }}
           ><PencilIcon /></button>
           <button
-            title="Delete"
+            title={t.delete}
             className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
           ><TrashIcon /></button>
@@ -226,29 +233,30 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             // visible. Deeper rows sit above ancestors during the handoff.
             data-folder-row={node.id}
             // Selection is marked with a data attribute so the stylesheet can
-            // tint it opaquely; TreeNodeTrigger's own `bg-accent/80` is a
-            // translucent background-color in Tailwind's `utilities` layer,
-            // which beats any specificity in `components`, so it's overridden
-            // by the inline backgroundColor below rather than by a CSS rule.
+            // give it the same translucent tint as a hovered/bookmark row;
+            // TreeNodeTrigger's own `bg-accent/80` is a translucent
+            // background-color in Tailwind's `utilities` layer, which beats
+            // any specificity in `components`, so it's overridden by CSS in
+            // index.css keyed off `data-selected` instead.
             data-selected={selectedId === node.id ? '' : undefined}
             className={`sticky folder-sticky -mx-3 rounded-none ${
               isDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
             // TreeNodeTrigger spreads props after its own style, so passing
-            // `style` here replaces its paddingLeft — restate the indent.
+            // `style` here replaces its padding — restate the indent.
             // +12 compensates for the -mx-3 (12px) escape of the panel's own
             // px-3 padding, so indentation still lines up despite the row now
             // spanning the full panel width.
+            //
+            // No backgroundColor here: a folder row is transparent like a
+            // bookmark row by default, gets the same translucent tint on
+            // hover/selection, and only gains the opaque `--sticky-row-bg`
+            // backdrop while actually pinned (`data-stuck`, set by
+            // useInnermostSticky above) — see index.css.
             style={{
               top: 0,
               zIndex: 10 + level,
-              paddingLeft: level * INDENT + 8 + 12,
-              // Inline beats the `utilities` cascade layer, keeping the row's
-              // own backdrop in place even when selected (see data-selected
-              // above). `--sticky-row-bg` is opaque with glass off and a
-              // translucent tint with it on — see index.css, where the matching
-              // backdrop-filter is applied.
-              backgroundColor: 'var(--sticky-row-bg)',
+              paddingInlineStart: level * INDENT + 8 + 12,
             }}
             {...(dragProps as DragHandlerProps)}
           >
@@ -261,7 +269,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             className={`group relative -mx-3 flex cursor-pointer items-center rounded-none px-3 py-2 no-underline transition-all duration-200 hover:bg-accent/50 ${
               isDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
-            style={{ paddingLeft: level * 20 + 8 + 12 }}
+            style={{ paddingInlineStart: level * 20 + 8 + 12 }}
             {...(newTab && { target: '_blank', rel: 'noopener noreferrer' })}
             {...dragProps}
           >
@@ -336,6 +344,7 @@ export default function FolderTree({
   /** Add a folder/link at the top level, from the root row's own buttons. */
   onAddRoot?: (kind: 'folder' | 'link') => void
 }) {
+  const { t } = useI18n()
   const trimmedQuery = query.trim()
   const visible = trimmedQuery ? matchIds(tree, trimmedQuery) : null
   const hasResults = !trimmedQuery || (visible?.size ?? 0) > 0
@@ -388,34 +397,34 @@ export default function FolderTree({
           // separate drop strip below only appears as a fallback hint.
           <div
             {...rootDropProps}
-            title="Drop here to move to top level"
+            title={t.dropToTopLevel}
             // z-index sits above the folder rows, which use `10 + level` —
             // a deeply nested row must not paint over the pinned root. Full
             // width, matching the other rows (see their `mx-0 rounded-none`).
-            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pr-3 transition-colors ${
+            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pe-3 transition-colors ${
               rootDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
-            // Left padding matches a real folder row's own paddingLeft at
+            // Start padding matches a real folder row's own indent at
             // level 0 (INDENT * 0 + 8 + 12, see the folder row below), and the
             // spacer that follows matches TreeExpander's box (w-4 + mr-1) so
             // the root's icon lines up with a folder row's icon exactly —
             // folder rows always reserve that space for their chevron, even
             // when they have no children. No `gap` here, same as the folder
             // row: it relies purely on each child's own margin.
-            style={{ backgroundColor: 'var(--sticky-row-bg)', paddingLeft: 8 + 12 }}
+            style={{ backgroundColor: 'var(--sticky-row-bg)', paddingInlineStart: 8 + 12 }}
           >
-            <span className="mr-1 h-4 w-4 shrink-0" />
+            <span className="me-1 h-4 w-4 shrink-0" />
             <RootIcon className="size-4 shrink-0 text-muted-foreground" />
-            <span className="ml-1.5 flex-1 truncate text-sm font-medium">{rootLabel}</span>
+            <span className="ms-1.5 flex-1 truncate text-sm font-medium">{rootLabel}</span>
             {onAddRoot && (
-              <span className="ml-2 flex shrink-0 items-center gap-0.5">
+              <span className="ms-2 flex shrink-0 items-center gap-0.5">
                 <button
-                  title="New folder"
+                  title={t.newFolder}
                   className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
                   onClick={() => onAddRoot('folder')}
                 ><FolderPlusIcon /></button>
                 <button
-                  title="New bookmark"
+                  title={t.newBookmark}
                   className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
                   onClick={() => onAddRoot('link')}
                 ><BookmarkSimpleIcon /></button>
@@ -426,11 +435,11 @@ export default function FolderTree({
 
         {tree.length === 0 ? (
           <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
-            Nothing here yet — add a folder or a bookmark.
+            {t.treeEmpty}
           </p>
         ) : !hasResults ? (
           <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
-            No folders or bookmarks match "{trimmedQuery}".
+            {t.treeNoMatches(trimmedQuery)}
           </p>
         ) : (
           <TreeView className="px-0 pt-2">
@@ -457,12 +466,12 @@ export default function FolderTree({
         {dragging !== null && (
           <div
             {...rootDropProps}
-            title="Drop here to move to top level"
+            title={t.dropToTopLevel}
             className={`mx-1 mt-1 flex h-10 items-center justify-center rounded-md border border-dashed text-xs transition-colors ${
               rootDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'
             }`}
           >
-            Drop here to move to top level
+            {t.dropToTopLevel}
           </div>
         )}
 
