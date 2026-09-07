@@ -9,7 +9,15 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
   // "/" focuses search, the way it works most everywhere else.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === '/' && document.activeElement !== ref.current) {
+      // Don't hijack "/" while the user is typing somewhere else — in a modal's
+      // name field, say, or any contenteditable — where it's a literal slash.
+      const el = document.activeElement as HTMLElement | null
+      const typing =
+        el instanceof HTMLInputElement ||
+        el instanceof HTMLTextAreaElement ||
+        el instanceof HTMLSelectElement ||
+        el?.isContentEditable === true
+      if (e.key === '/' && !typing) {
         e.preventDefault()
         ref.current?.focus()
       }
@@ -24,8 +32,14 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
       {/* Above the input: `.glass`'s backdrop-filter makes the input its own
           stacking context, which would otherwise paint over this icon. */}
       <MagnifyingGlassIcon className="pointer-events-none absolute start-[18px] top-1/2 z-10 size-5 -translate-y-1/2 text-foreground/70" />
+      {/* A placeholder is not a label: it disappears on the first keystroke
+          and is not a reliable accessible name. The visible design has no
+          room for a label, so it is provided to assistive tech only. */}
+      <label htmlFor="bookmark-search" className="sr-only">{t.searchPlaceholder}</label>
       <input
+        id="bookmark-search"
         ref={ref}
+        type="search"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={t.searchPlaceholder}
@@ -37,8 +51,9 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
         <button
           type="button"
           title={t.clear}
+          aria-label={t.clear}
           onClick={() => { onChange(''); ref.current?.focus() }}
-          className="absolute end-[14px] top-1/2 flex -translate-y-1/2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground [&_svg]:size-4"
+          className="absolute end-[14px] top-1/2 flex size-6 -translate-y-1/2 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground [&_svg]:size-4"
         ><XMarkIcon /></button>
       )}
     </form>

@@ -118,6 +118,37 @@ const en = {
   imageUrlPlaceholder: 'https://example.com/image.jpg',
   imageTooLarge: 'Image is too large (max 3MB).',
   resetToDefaults: 'Reset to defaults',
+  // ── Accessible names ──────────────────────────────────────────────────
+  // Icon-only controls need a name that is readable without seeing the icon,
+  // and it has to name the *thing* acted on, not just the verb: a screen
+  // reader user tabbing through a grid of shortcuts hears "Edit" fourteen
+  // times otherwise. `title` stays for the mouse tooltip; these become the
+  // `aria-label`.
+  editNamed: (name: string) => `Edit ${name}`,
+  deleteNamed: (name: string) => `Delete ${name}`,
+  renameNamed: (name: string) => `Rename ${name}`,
+  addFolderIn: (name: string) => `Add folder in ${name}`,
+  addLinkIn: (name: string) => `Add bookmark in ${name}`,
+  moveNamed: (name: string) => `Move ${name}`,
+  iconNamed: (name: string) => `Icon: ${name}`,
+
+  // ── Move dialog (keyboard alternative to drag-and-drop) ────────────────
+  moveTitle: (name: string) => `Move "${name}"`,
+  moveDestination: 'Destination folder',
+  moveToTopLevel: 'Top level',
+  moveHere: 'Move here',
+
+  // ── Landmarks and live regions ────────────────────────────────────────
+  // Names the regions of the page so a screen reader's landmark list reads as
+  // an outline rather than "region, region, region".
+  landmarkHeader: 'Clock and greeting',
+  landmarkShortcuts: 'Shortcuts',
+  landmarkBookmarks: 'Bookmarks',
+  skipToBookmarks: 'Skip to bookmarks',
+  // The clock is read as one sentence on demand rather than announced every
+  // second; see Clock.tsx.
+  clockLabel: (date: string, time: string, zone: string) =>
+    `It is ${date}, ${time}, ${zone}.`,
 } as const
 
 export type Messages = {

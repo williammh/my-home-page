@@ -80,6 +80,26 @@ const de: Messages = {
   imageUrlPlaceholder: 'https://beispiel.de/bild.jpg',
   imageTooLarge: 'Das Bild ist zu groß (max. 3 MB).',
   resetToDefaults: 'Auf Standard zurücksetzen',
+
+  // ── Barrierefreie Namen ───────────────────────────────────────────────
+  editNamed: (name) => `${name} bearbeiten`,
+  deleteNamed: (name) => `${name} löschen`,
+  renameNamed: (name) => `${name} umbenennen`,
+  addFolderIn: (name) => `Ordner in ${name} hinzufügen`,
+  addLinkIn: (name) => `Lesezeichen in ${name} hinzufügen`,
+  moveNamed: (name) => `${name} verschieben`,
+  iconNamed: (name) => `Symbol: ${name}`,
+
+  moveTitle: (name) => `„${name}" verschieben`,
+  moveDestination: 'Zielordner',
+  moveToTopLevel: 'Oberste Ebene',
+  moveHere: 'Hierhin verschieben',
+
+  landmarkHeader: 'Uhr und Begrüßung',
+  landmarkShortcuts: 'Verknüpfungen',
+  landmarkBookmarks: 'Lesezeichen',
+  skipToBookmarks: 'Zu den Lesezeichen springen',
+  clockLabel: (date, time, zone) => `Es ist ${time} am ${date}, ${zone}.`,
 }
 
 export default de

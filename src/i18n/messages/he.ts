@@ -81,6 +81,26 @@ const he: Messages = {
   imageUrlPlaceholder: 'https://example.com/image.jpg',
   imageTooLarge: 'התמונה גדולה מדי (3MB לכל היותר).',
   resetToDefaults: 'איפוס לברירת המחדל',
+
+  // ── שמות נגישים ───────────────────────────────────────────────────────
+  editNamed: (name) => `עריכת ${name}`,
+  deleteNamed: (name) => `מחיקת ${name}`,
+  renameNamed: (name) => `שינוי השם של ${name}`,
+  addFolderIn: (name) => `הוספת תיקייה ב־${name}`,
+  addLinkIn: (name) => `הוספת סימנייה ב־${name}`,
+  moveNamed: (name) => `העברת ${name}`,
+  iconNamed: (name) => `סמל: ${name}`,
+
+  moveTitle: (name) => `העברת "${name}"`,
+  moveDestination: 'תיקיית היעד',
+  moveToTopLevel: 'הרמה העליונה',
+  moveHere: 'העברה לכאן',
+
+  landmarkHeader: 'שעון וברכה',
+  landmarkShortcuts: 'קיצורי דרך',
+  landmarkBookmarks: 'סימניות',
+  skipToBookmarks: 'דילוג לסימניות',
+  clockLabel: (date, time, zone) => `השעה ${time} ב־${date}, ${zone}.`,
 }
 
 export default he

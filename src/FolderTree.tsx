@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
-import { FolderPlusIcon, PencilIcon, TrashIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PencilIcon, TrashIcon, ArrowsUpDownIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
 import { useI18n } from './i18n'
@@ -23,6 +23,14 @@ interface DragHandlerProps {
 
 /** Must match the `indent` given to TreeProvider below. */
 const INDENT = 20
+
+/**
+ * Row action button. `size-6` is 24px — the WCAG 2.2 (2.5.8) minimum target —
+ * while the icon inside stays 14px, so the hit area grew without the row
+ * getting visually heavier.
+ */
+const rowBtnCls =
+  'flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5'
 
 /** ids of every node that matches `query` by name, plus all of their ancestors. */
 function matchIds(nodes: BookmarkNode[], query: string, ancestors: string[] = []): Set<string> {
@@ -106,6 +114,7 @@ function Row({
   onEdit,
   onRemove,
   onAdd,
+  onMoveRequest,
 }: {
   node: BookmarkNode
   query: string
@@ -113,6 +122,7 @@ function Row({
   onEdit: (node: BookmarkNode) => void
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
+  onMoveRequest: (node: BookmarkNode) => void
 }) {
   const { t } = useI18n()
   const folderNode = node.type === 'folder' ? node : null
@@ -128,27 +138,45 @@ function Row({
       {folderNode && (
         <span className="ms-2 flex shrink-0 items-center gap-0.5">
           <button
+            type="button"
             title={t.addFolder}
-            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            aria-label={t.addFolderIn(node.name)}
+            className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
           ><FolderPlusIcon /></button>
           <button
+            type="button"
             title={t.addLink}
-            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            aria-label={t.addLinkIn(node.name)}
+            className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
           ><BookmarkSimpleIcon /></button>
         </span>
       )}
       {editing && (
         <span className="ms-2 flex shrink-0 items-center gap-0.5">
+          {/* The keyboard path to what dragging does with a mouse. It lives in
+              the edit affordance rather than always-on so the row stays quiet,
+              and it is the only way to reorder without a pointer. */}
           <button
+            type="button"
+            title={t.moveNamed(node.name)}
+            aria-label={t.moveNamed(node.name)}
+            className={rowBtnCls}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveRequest(node) }}
+          ><ArrowsUpDownIcon /></button>
+          <button
+            type="button"
             title={isFolder ? t.rename : t.edit}
-            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            aria-label={isFolder ? t.renameNamed(node.name) : t.editNamed(node.name)}
+            className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(node) }}
           ><PencilIcon /></button>
           <button
+            type="button"
             title={t.delete}
-            className="flex rounded-md p-1 text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5"
+            aria-label={t.deleteNamed(node.name)}
+            className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
           ><TrashIcon /></button>
         </span>
@@ -170,13 +198,14 @@ interface NodesProps {
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
   onMove: (id: string, targetId: string | null) => void
+  onMoveRequest: (node: BookmarkNode) => void
   draggingId: string | null
   dragOverId: string | null
   setDragOverId: (id: string | null | ((cur: string | null) => string | null)) => void
   onDragging: (id: string | null) => void
 }
 
-function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, editing, onEdit, onRemove, onAdd, onMove, draggingId, dragOverId, setDragOverId, onDragging }: NodesProps) {
+function Nodes({ nodes, parentId = null, level, query, visible, newTab, selectedId, editing, onEdit, onRemove, onAdd, onMove, onMoveRequest, draggingId, dragOverId, setDragOverId, onDragging }: NodesProps) {
   const shown = query ? nodes.filter((n) => visible?.has(n.id)) : nodes
 
   return shown.map((node, i) => {
@@ -231,6 +260,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             // the ancestor up and out of the panel exactly as the child's row
             // arrives at the top, so only the folder being scrolled is
             // visible. Deeper rows sit above ancestors during the handoff.
+            hasChildren={hasChildren}
             data-folder-row={node.id}
             // Selection is marked with a data attribute so the stylesheet can
             // give it the same translucent tint as a hovered/bookmark row;
@@ -260,12 +290,17 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             }}
             {...(dragProps as DragHandlerProps)}
           >
-            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
+            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} onMoveRequest={onMoveRequest} />
           </TreeNodeTrigger>
         ) : node.type === 'link' && (
           <a
             href={node.url}
             title={node.url}
+            // A link row is a leaf of the tree, so it has to be a `treeitem`
+            // for the `role="tree"` above to be valid. The <a> keeps its href,
+            // so it still opens, is still middle-clickable, and still shows
+            // its target in the status bar.
+            role="treeitem"
             className={`group relative -mx-3 flex cursor-pointer items-center rounded-none px-3 py-2 no-underline transition-all duration-200 hover:bg-accent/50 ${
               isDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
@@ -274,7 +309,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
             {...dragProps}
           >
             <TreeLines />
-            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} />
+            <Row node={node} query={query} editing={editing} onEdit={onEdit} onRemove={onRemove} onAdd={onAdd} onMoveRequest={onMoveRequest} />
           </a>
         )}
         {hasChildren && folderNode && (
@@ -293,6 +328,7 @@ function Nodes({ nodes, parentId = null, level, query, visible, newTab, selected
               onRemove={onRemove}
               onAdd={onAdd}
               onMove={onMove}
+              onMoveRequest={onMoveRequest}
               dragOverId={dragOverId}
               setDragOverId={setDragOverId}
               onDragging={onDragging}
@@ -324,6 +360,7 @@ export default function FolderTree({
   onRemove,
   onAdd,
   onMove,
+  onMoveRequest,
   onSelect,
   rootLabel,
   onAddRoot,
@@ -338,6 +375,8 @@ export default function FolderTree({
   onRemove: (id: string) => void
   onAdd: (folder: FolderNode, kind: 'folder' | 'link') => void
   onMove: (id: string, targetId: string | null) => void
+  /** Open the "Move to…" dialog — the keyboard alternative to dragging. */
+  onMoveRequest: (node: BookmarkNode) => void
   onSelect: (id: string | null) => void
   /** Name of the synthetic root row shown above the tree (e.g. "Bookmarks"). */
   rootLabel?: string
@@ -406,7 +445,7 @@ export default function FolderTree({
             }`}
             // Start padding matches a real folder row's own indent at
             // level 0 (INDENT * 0 + 8 + 12, see the folder row below), and the
-            // spacer that follows matches TreeExpander's box (w-4 + mr-1) so
+            // spacer that follows matches TreeExpander's box (w-4 + me-1) so
             // the root's icon lines up with a folder row's icon exactly —
             // folder rows always reserve that space for their chevron, even
             // when they have no children. No `gap` here, same as the folder
@@ -419,13 +458,17 @@ export default function FolderTree({
             {onAddRoot && (
               <span className="ms-2 flex shrink-0 items-center gap-0.5">
                 <button
+                  type="button"
                   title={t.newFolder}
-                  className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
+                  aria-label={t.newFolder}
+                  className="flex size-6 items-center justify-center rounded-md text-foreground hover:bg-border [&_svg]:size-3.5"
                   onClick={() => onAddRoot('folder')}
                 ><FolderPlusIcon /></button>
                 <button
+                  type="button"
                   title={t.newBookmark}
-                  className="flex rounded-md p-1 text-foreground hover:bg-border [&_svg]:size-3.5"
+                  aria-label={t.newBookmark}
+                  className="flex size-6 items-center justify-center rounded-md text-foreground hover:bg-border [&_svg]:size-3.5"
                   onClick={() => onAddRoot('link')}
                 ><BookmarkSimpleIcon /></button>
               </span>
@@ -442,7 +485,7 @@ export default function FolderTree({
             {t.treeNoMatches(trimmedQuery)}
           </p>
         ) : (
-          <TreeView className="px-0 pt-2">
+          <TreeView role="tree" aria-label={rootLabel} className="px-0 pt-2">
             <Nodes
               nodes={tree}
               level={0}
@@ -455,6 +498,7 @@ export default function FolderTree({
               onRemove={onRemove}
               onAdd={onAdd}
               onMove={onMove}
+              onMoveRequest={onMoveRequest}
               draggingId={dragging}
               dragOverId={dragOverId}
               setDragOverId={setDragOverId}
@@ -466,6 +510,7 @@ export default function FolderTree({
         {dragging !== null && (
           <div
             {...rootDropProps}
+            aria-hidden="true"
             title={t.dropToTopLevel}
             className={`mx-1 mt-1 flex h-10 items-center justify-center rounded-md border border-dashed text-xs transition-colors ${
               rootDragOver ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground'

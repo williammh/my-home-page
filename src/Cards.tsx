@@ -63,18 +63,28 @@ export function LinkCard({
       </span>
       {editable && (
         <span
-          className={`absolute end-[5px] top-[5px] flex gap-0.5 transition-opacity duration-150 group-hover:opacity-100 ${
+          // `group-focus-within` alongside `group-hover`: the controls are
+          // revealed on hover for a mouse, but a keyboard user reaches them by
+          // tabbing, and an `opacity-0` button is invisible while focused.
+          className={`absolute end-[5px] top-[5px] flex gap-0.5 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100 ${
             editing ? 'opacity-100' : 'opacity-0'
           }`}
         >
           <button
+            type="button"
+            // `title` is the mouse tooltip; `aria-label` is the accessible
+            // name, and it names the shortcut rather than just the verb —
+            // otherwise a screen reader reads a grid of "Edit, Edit, Edit".
             title={t.edit}
-            className="flex rounded-md bg-foreground/10 p-1 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
+            aria-label={t.editNamed(node.name)}
+            className="flex size-6 items-center justify-center rounded-md bg-foreground/10 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
             onClick={(e) => { e.preventDefault(); onEdit(node) }}
           ><PencilIcon /></button>
           <button
+            type="button"
             title={t.delete}
-            className="flex rounded-md bg-foreground/10 p-1 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
+            aria-label={t.deleteNamed(node.name)}
+            className="flex size-6 items-center justify-center rounded-md bg-foreground/10 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2"
             onClick={(e) => { e.preventDefault(); onRemove(node.id) }}
           ><TrashIcon /></button>
         </span>

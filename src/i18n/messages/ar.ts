@@ -100,6 +100,26 @@ const ar: Messages = {
   imageUrlPlaceholder: 'https://example.com/image.jpg',
   imageTooLarge: 'الصورة كبيرة جدًا (3 ميغابايت كحد أقصى).',
   resetToDefaults: 'إعادة التعيين إلى الافتراضي',
+
+  // ── الأسماء الوصفية لقارئات الشاشة ────────────────────────────────────
+  editNamed: (name) => `تحرير ${name}`,
+  deleteNamed: (name) => `حذف ${name}`,
+  renameNamed: (name) => `إعادة تسمية ${name}`,
+  addFolderIn: (name) => `إضافة مجلد في ${name}`,
+  addLinkIn: (name) => `إضافة إشارة مرجعية في ${name}`,
+  moveNamed: (name) => `نقل ${name}`,
+  iconNamed: (name) => `أيقونة: ${name}`,
+
+  moveTitle: (name) => `نقل «${name}»`,
+  moveDestination: 'المجلد الوجهة',
+  moveToTopLevel: 'المستوى الأعلى',
+  moveHere: 'النقل إلى هنا',
+
+  landmarkHeader: 'الساعة والتحية',
+  landmarkShortcuts: 'الاختصارات',
+  landmarkBookmarks: 'الإشارات المرجعية',
+  skipToBookmarks: 'التخطي إلى الإشارات المرجعية',
+  clockLabel: (date, time, zone) => `الساعة ${time} في ${date}، ${zone}.`,
 }
 
 export default ar

@@ -81,6 +81,26 @@ const zh: Messages = {
   imageUrlPlaceholder: 'https://example.com/image.jpg',
   imageTooLarge: '图片太大（最大 3 MB）。',
   resetToDefaults: '恢复默认设置',
+
+  // ── 无障碍名称 ────────────────────────────────────────────────────────
+  editNamed: (name) => `编辑${name}`,
+  deleteNamed: (name) => `删除${name}`,
+  renameNamed: (name) => `重命名${name}`,
+  addFolderIn: (name) => `在${name}中添加文件夹`,
+  addLinkIn: (name) => `在${name}中添加书签`,
+  moveNamed: (name) => `移动${name}`,
+  iconNamed: (name) => `图标：${name}`,
+
+  moveTitle: (name) => `移动“${name}”`,
+  moveDestination: '目标文件夹',
+  moveToTopLevel: '顶层',
+  moveHere: '移动到这里',
+
+  landmarkHeader: '时钟和问候语',
+  landmarkShortcuts: '快捷方式',
+  landmarkBookmarks: '书签',
+  skipToBookmarks: '跳到书签',
+  clockLabel: (date, time, zone) => `现在是${date} ${time}，${zone}。`,
 }
 
 export default zh

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    // Tests run in Node, so they need its globals (`__dirname`) and the
+    // `node:` module types that the browser-only app config excludes.
+    "types": ["node", "vitest/globals"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "noEmit": true
+  },
+  "include": ["src/test", "vitest.config.ts"]
+}

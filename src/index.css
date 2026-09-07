@@ -129,6 +129,61 @@
   html {
     @apply font-sans;
   }
+
+  /* ---------------------------------------------------------------------
+     Reduced motion
+     ---------------------------------------------------------------------
+     `prefers-reduced-motion` is an accessibility setting, not a preference
+     about polish: for people with vestibular disorders, movement can cause
+     nausea and dizziness. SplitFlapText honours it in its own JS, but every
+     other `transition-*`, `animate-*` and hover translate in the app is
+     Tailwind-generated and unconditional, so it is neutralized here in one
+     place rather than at each call site.
+
+     Not `animation: none`: a spinner that never advances reads as a hung
+     page. A near-zero duration lets any animation reach its end state
+     immediately, which is the intent of the setting — and `!important` is
+     needed to beat Tailwind's own utilities. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* The shortcut cards' hover lift is pure motion with no state to
+       preserve, so it is dropped outright rather than sped up. Scoped to the
+       card rather than every :hover, so it doesn't flatten transforms that
+       carry meaning elsewhere. */
+    .hover\:-translate-y-0\.5:hover {
+      transform: none !important;
+    }
+  }
+
+  /* ---------------------------------------------------------------------
+     Forced colors (Windows high contrast)
+     ---------------------------------------------------------------------
+     In forced-colors mode the OS replaces the palette, and `backdrop-filter`
+     plus translucent washes leave surfaces that no longer separate from each
+     other. Drop the glass entirely and let the system colors do the work. */
+  @media (forced-colors: active) {
+    .glass,
+    .glass-panel {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      background-color: Canvas !important;
+      border: 1px solid CanvasText !important;
+    }
+
+    /* Focus must stay visible when the author's ring color is discarded. */
+    :focus-visible {
+      outline: 2px solid Highlight !important;
+      outline-offset: 2px;
+    }
+  }
 }
 /* ---------------------------------------------------------------------------
    Glass surface

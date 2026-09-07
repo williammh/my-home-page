@@ -85,6 +85,26 @@ const ja: Messages = {
   imageUrlPlaceholder: 'https://example.com/image.jpg',
   imageTooLarge: '画像が大きすぎます (最大 3 MB)。',
   resetToDefaults: '既定値に戻す',
+
+  // ── アクセシブルな名前 ────────────────────────────────────────────────
+  editNamed: (name) => `${name} を編集`,
+  deleteNamed: (name) => `${name} を削除`,
+  renameNamed: (name) => `${name} の名前を変更`,
+  addFolderIn: (name) => `${name} にフォルダーを追加`,
+  addLinkIn: (name) => `${name} にブックマークを追加`,
+  moveNamed: (name) => `${name} を移動`,
+  iconNamed: (name) => `アイコン: ${name}`,
+
+  moveTitle: (name) => `「${name}」を移動`,
+  moveDestination: '移動先のフォルダー',
+  moveToTopLevel: '最上位',
+  moveHere: 'ここに移動',
+
+  landmarkHeader: '時計とあいさつ',
+  landmarkShortcuts: 'ショートカット',
+  landmarkBookmarks: 'ブックマーク',
+  skipToBookmarks: 'ブックマークへスキップ',
+  clockLabel: (date, time, zone) => `${date} ${time}、${zone}。`,
 }
 
 export default ja

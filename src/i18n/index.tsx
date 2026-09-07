@@ -56,6 +56,35 @@ export interface I18n {
 const I18nContext = createContext<I18n | null>(null)
 
 /**
+ * The browser's own zone, used whenever the stored one can't be used.
+ */
+function systemTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+/**
+ * A timezone `Intl` will actually accept.
+ *
+ * The stored value comes from localStorage and can outlive the runtime that
+ * wrote it — a zone renamed or removed from the IANA database, or a profile
+ * synced to a browser with an older ICU. Every `Intl.DateTimeFormat` in this
+ * module passes `timeZone`, so an unusable value there throws a RangeError on
+ * *every* format call, which takes the whole page down rather than degrading.
+ */
+function usableTimeZone(timeZone: string): string {
+  try {
+    new Intl.DateTimeFormat('en', { timeZone })
+    return timeZone
+  } catch {
+    return systemTimeZone()
+  }
+}
+
+/**
  * Build the i18n value for a locale setting and timezone.
  *
  * `setting` is the stored preference, where 'system' (the default) means
@@ -63,9 +92,10 @@ const I18nContext = createContext<I18n | null>(null)
  * the OS language moves the app with it, rather than freezing whatever was
  * detected the first time the page was opened.
  */
-export function buildI18n(setting: string, timeZone: string): I18n {
+export function buildI18n(setting: string, requestedTimeZone: string): I18n {
   const locale = setting === 'system' ? detectLocale() : resolveLocale(setting) ?? DEFAULT_LOCALE
   const t = CATALOGS[locale] ?? en
+  const timeZone = usableTimeZone(requestedTimeZone)
 
   // `Intl.DateTimeFormat` construction is the expensive part, not `format`, so
   // formatters are cached per options shape and reused across ticks — the

@@ -59,8 +59,9 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
       <button
         type="button"
         title={t.settings}
+        aria-label={t.settings}
         onClick={onOpenSettings}
-        className="glass glass-hover absolute -end-1 top-0 flex rounded-md p-1.5 text-foreground transition-colors duration-150 [&_svg]:size-4"
+        className="glass glass-hover absolute -end-1 top-0 flex size-8 items-center justify-center rounded-md text-foreground transition-colors duration-150 [&_svg]:size-4"
       ><Cog6ToothIcon /></button>
 
       {/* Salutation — the one piece of the header that's about the reader, so
@@ -101,9 +102,27 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
           as a separate widget. `items-baseline` + `flex-wrap` keeps the words
           on the text baseline and lets the sentence wrap on narrow screens
           without the tiles overflowing. */}
+      {/* The visible sentence is assembled from three separately-styled
+          pieces, one of which is a grid of animated character tiles — read
+          literally, that is unusable.
+
+          The fix is a real, visually-hidden sentence rather than an
+          `aria-label` on the <p>: `aria-label` is prohibited on an element
+          with no role, so it would simply be discarded. The visible pieces are
+          then hidden from assistive tech, leaving exactly one reading of the
+          time.
+
+          Deliberately NOT `aria-live`: the seconds change every tick, and a
+          live region here would announce the time endlessly, drowning out the
+          rest of the page. The time is read on demand instead — which is how
+          a clock on a wall works too. */}
       <p className={`mt-2.5 flex flex-wrap items-baseline gap-x-[0.4em] gap-y-1.5 text-[clamp(13px,1.7vw,17px)] leading-snug ${headlineCls(settings.textTheme)}`}>
-        <span>{t.clockBefore(date)}</span>
+        <span className="sr-only">
+          {t.clockLabel(date, meridiem ? `${time} ${meridiem}` : time, timeZoneName)}
+        </span>
+        <span aria-hidden="true">{t.clockBefore(date)}</span>
         <SplitFlapText
+          aria-hidden="true"
           words={words}
           loop={false}
           cycleDelay={40}
@@ -118,7 +137,7 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
           gap={0}
           fontSize="1em"
         />
-        <span className="-ms-[0.15em]">{t.clockAfter(meridiem, timeZoneName)}</span>
+        <span aria-hidden="true" className="-ms-[0.15em]">{t.clockAfter(meridiem, timeZoneName)}</span>
       </p>
     </div>
   )

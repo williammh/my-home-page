@@ -223,22 +223,50 @@ export const TreeNodeTrigger = ({
   children,
   className,
   onClick,
+  onKeyDown,
+  hasChildren,
   ...props
 }: Omit<HTMLMotionProps<"div">, "children" | keyof NativeDragHandlers> & {
   children?: ReactNode;
+  /** Whether this row can expand — drives `aria-expanded`. */
+  hasChildren?: boolean;
 } & NativeDragHandlers) => {
-  const { selectedIds, toggleExpanded, handleSelection, indent } = useTree();
+  const { selectedIds, expandedIds, toggleExpanded, handleSelection, indent } = useTree();
   const { nodeId, level } = useTreeNode();
   const isSelected = selectedIds.includes(nodeId);
+  const isExpanded = expandedIds.has(nodeId);
 
   return (
     <motion.div
       className={cn(
         "group relative mx-1 flex cursor-pointer items-center rounded-md px-3 py-2 transition-all duration-200",
         "hover:bg-accent/50",
+        // A focus ring is required, not optional: this row is a real tab stop
+        // now, and without it a keyboard user cannot see where they are.
+        "focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring",
         isSelected && "bg-accent/80",
         className
       )}
+      // The row is a clickable div, which is invisible to keyboard and to
+      // assistive tech on its own. `role="treeitem"` names what it is,
+      // `aria-expanded` says whether it is open, and `tabIndex` puts it in the
+      // tab order so it can be reached at all.
+      role="treeitem"
+      // Only a row that can actually expand carries `aria-expanded` — on a
+      // childless row it would claim a control that isn't there.
+      aria-expanded={hasChildren ? isExpanded : undefined}
+      aria-selected={isSelected}
+      tabIndex={0}
+      onKeyDown={(e) => {
+        // Enter/Space are what a treeitem is expected to respond to; without
+        // them the row could be focused but never activated.
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggleExpanded(nodeId);
+          handleSelection(nodeId, e.ctrlKey || e.metaKey);
+        }
+        onKeyDown?.(e);
+      }}
       onClick={(e) => {
         toggleExpanded(nodeId);
         handleSelection(nodeId, e.ctrlKey || e.metaKey);
@@ -381,14 +409,14 @@ export const TreeExpander = ({
   const isExpanded = expandedIds.has(nodeId);
 
   if (!hasChildren) {
-    return <div className="mr-1 h-4 w-4" />;
+    return <div className="me-1 h-4 w-4" />;
   }
 
   return (
     <motion.div
       animate={{ rotate: isExpanded ? 90 : 0 }}
       className={cn(
-        "mr-1 flex h-4 w-4 cursor-pointer items-center justify-center",
+        "me-1 flex h-4 w-4 cursor-pointer items-center justify-center",
         className
       )}
       onClick={(e) => {
@@ -437,7 +465,7 @@ export const TreeIcon = ({
   return (
     <motion.div
       className={cn(
-        "mr-2 flex h-4 w-4 items-center justify-center text-muted-foreground",
+        "me-2 flex h-4 w-4 items-center justify-center text-muted-foreground",
         className
       )}
       transition={{ duration: 0.15 }}

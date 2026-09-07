@@ -4,12 +4,12 @@ import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
 import FolderTree from './FolderTree'
-import { FolderModal, LinkModal, SettingsModal } from './Modal'
+import { FolderModal, LinkModal, MoveModal, SettingsModal } from './Modal'
 import { Button } from '@/components/ui/button'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
 import { I18nProvider, useI18n } from './i18n'
 import { headlineCls } from './textTheme'
-import type { FolderNode, LinkNode, Settings } from './types'
+import type { FolderNode, LinkNode, Settings, TreeNode } from './types'
 
 // Auto-fill sizes the columns from available width, but at a narrow viewport
 // it would settle on two or three cards a row. Below 520px the track count is
@@ -23,6 +23,7 @@ type Modal =
   | { kind: 'folder'; node?: FolderNode; target?: string | null }
   | { kind: 'link'; node?: LinkNode; target?: string | null; isShortcut?: boolean }
   | { kind: 'settings' }
+  | { kind: 'move'; node: TreeNode }
 
 /**
  * Settings are read here and handed to the provider, so `AppBody` — and every
@@ -73,7 +74,8 @@ function AppBody({
     : shortcuts
 
   const save = (data: Settings | { name: string; url: string } | { name: string; icon: string }) => {
-    if (!modal) return
+    // 'move' is not an edit form — it commits through `moveNode` directly.
+    if (!modal || modal.kind === 'move') return
     if (modal.kind === 'settings') {
       updateSettings(data as Settings)
     } else if (modal.kind === 'link' && modal.isShortcut) {
@@ -161,26 +163,49 @@ function AppBody({
       ) : settings.backgroundColor ? (
         <div className="fixed inset-0 -z-10" style={{ backgroundColor: settings.backgroundColor }} />
       ) : null}
-      {/* `min-h-screen` rather than `h-screen`: the page is a single-screen
+      {/* `min-h-*` rather than a fixed height: the page is a single-screen
           layout whenever it fits, but on a short or narrow viewport the
           content grows and the page scrolls normally. Pinning to exactly one
           screen instead made the header and the bookmarks panel compete for a
           fixed budget, which clipped whichever lost through the middle of a
-          card. */}
-      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-6 pb-[5vh] pt-[clamp(24px,9vh,96px)] max-[520px]:px-4">
-        <div className="shrink-0">
+          card.
+
+          `dvh`, not `vh`: on mobile browsers `vh` is measured against the
+          viewport with the URL bar *retracted*, so a `100vh` layout runs under
+          the browser chrome until the user scrolls. `dvh` tracks the viewport
+          as it actually is. The safe-area insets keep content clear of a
+          notch in landscape and the home indicator at the bottom. */}
+      <div
+        className="mx-auto flex min-h-dvh max-w-[1080px] flex-col pt-[clamp(24px,9vh,96px)] [--page-gutter:24px] max-[520px]:[--page-gutter:16px]"
+        style={{
+          // `max()` of the design's gutter and the device's own inset, so a
+          // notch in landscape widens the padding but never narrows it.
+          paddingInlineStart: 'max(var(--page-gutter), env(safe-area-inset-left))',
+          paddingInlineEnd: 'max(var(--page-gutter), env(safe-area-inset-right))',
+          paddingBottom: 'calc(5vh + env(safe-area-inset-bottom))',
+        }}
+      >
+        {/* First tab stop on the page: the shortcut grid and the tree are both
+            long, so without this a keyboard user tabs through everything above
+            the bookmarks on every visit. Visually hidden until focused. */}
+        <a
+          href="#bookmarks-panel"
+          className="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:outline-2 focus:outline-ring"
+        >
+          {t.skipToBookmarks}
+        </a>
+        <header className="shrink-0" aria-label={t.landmarkHeader}>
           <Clock settings={settings} onOpenSettings={() => setModal({ kind: 'settings' })} />
 
           {(!trimmedQuery || matchedShortcuts.length > 0) && (
-            <section className="mb-5">
+            <section className="mb-5" aria-labelledby="shortcuts-heading">
               <div className={`mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
-                <h3 className={`text-xs font-semibold uppercase tracking-wider ${headlineCls(settings.textTheme)}`}>
+                <h2 id="shortcuts-heading" className="sr-only">
                   {t.shortcuts}
-                </h3>
-                {/* A hairline running from the label to the actions ties the
-                    two ends of the row together, so the button doesn't read as
+                </h2>
+                {/* A hairline fills the row so the edit button doesn't read as
                     floating unattached at the far edge. */}
-                <div className="h-px flex-1 bg-current opacity-15" />
+                <div aria-hidden="true" className="h-px flex-1 bg-current opacity-15" />
                 {!trimmedQuery && (
                   <Button
                     variant="glass"
@@ -211,6 +236,7 @@ function AppBody({
                   <button
                     type="button"
                     title={t.addShortcut}
+                    aria-label={t.addShortcut}
                     onClick={() => setModal({ kind: 'link', isShortcut: true })}
                     className="flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-current/25 px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-colors duration-150 hover:border-current/40 hover:bg-foreground/5 max-[520px]:min-h-[86px] max-[520px]:gap-1.5 max-[520px]:px-1 max-[520px]:pb-2.5 max-[520px]:pt-3"
                   >
@@ -227,11 +253,20 @@ function AppBody({
           )}
 
           <SearchBar value={query} onChange={setQuery} />
-        </div>
+        </header>
 
-        <section className="flex min-h-[320px] flex-1 flex-col">
+        <section className="flex min-h-[320px] flex-1 flex-col" aria-label={t.landmarkBookmarks}>
+          {/* `role="status"` (polite): the import/export outcome is the only
+              feedback that the action did anything, and it is otherwise
+              announced to nobody. Polite rather than assertive so it waits for
+              a pause instead of cutting the user off. */}
           {note && (
             <div
+              // `role="status"`, not `<output>`: `<output>` is specified as the
+              // result of a calculation, and this is an operation's outcome.
+              // Both are polite live regions; only this one says the right
+              // thing about what the text is.
+              role="status"
               className={`mb-3 flex shrink-0 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs ${
                 note.ok
                   ? 'border-primary/40 bg-primary/10 text-foreground'
@@ -242,7 +277,7 @@ function AppBody({
               <button
                 type="button"
                 title={t.dismiss}
-                className="shrink-0 rounded-md px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
+                className="min-h-6 shrink-0 rounded-md px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
                 onClick={() => setNote(null)}
               >
                 {t.dismiss}
@@ -254,7 +289,13 @@ function AppBody({
               row and the import/export bar are sticky *inside* it — so they
               stay put against the glass while the tree scrolls under them,
               rather than sitting outside as separate page furniture. */}
-          <div className="glass glass-panel scroll-themed relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg px-3">
+          <div
+            id="bookmarks-panel"
+            // `tabIndex={-1}`: the skip link has to be able to move focus here,
+            // and a container is not focusable on its own.
+            tabIndex={-1}
+            className="glass glass-panel scroll-themed relative flex min-h-0 flex-1 flex-col overflow-y-auto rounded-lg px-3 outline-none"
+          >
             {/* Vertical padding lives on the tree, not here: `p-3` on the
                 scroll container would offset sticky folder headers 12px down
                 from the visible top edge, leaving a gap for rows to scroll
@@ -270,6 +311,7 @@ function AppBody({
               onRemove={del}
               onAdd={(folder, kind) => setModal({ kind, target: folder.id })}
               onMove={moveNode}
+              onMoveRequest={(node) => setModal({ kind: 'move', node })}
               rootLabel={t.bookmarks}
               onAddRoot={(kind) => setModal({ kind, target: null })}
             />
@@ -282,12 +324,20 @@ function AppBody({
                 against the panel itself instead, and `sticky bottom-0` then
                 keeps it pinned once the tree grows past the panel's height. */}
             <div className="sticky bottom-0 z-50 ms-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
-              <Button variant="glass" className="rounded-lg" onClick={() => fileInputRef.current?.click()}>
+              <button
+                type="button"
+                className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-4"
+                onClick={() => fileInputRef.current?.click()}
+              >
                 <ArrowUpTrayIcon /> {t.import}
-              </Button>
-              <Button variant="glass" className="rounded-lg" onClick={onExport}>
+              </button>
+              <button
+                type="button"
+                className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-4"
+                onClick={onExport}
+              >
                 <ArrowDownTrayIcon /> {t.export}
-              </Button>
+              </button>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -307,6 +357,14 @@ function AppBody({
         )}
         {modal?.kind === 'settings' && (
           <SettingsModal initial={settings} onSave={save} onClose={() => setModal(null)} />
+        )}
+        {modal?.kind === 'move' && (
+          <MoveModal
+            node={modal.node}
+            tree={tree}
+            onMove={moveNode}
+            onClose={() => setModal(null)}
+          />
         )}
       </div>
     </>

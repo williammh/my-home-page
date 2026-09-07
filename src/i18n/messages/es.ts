@@ -80,6 +80,26 @@ const es: Messages = {
   imageUrlPlaceholder: 'https://ejemplo.com/imagen.jpg',
   imageTooLarge: 'La imagen es demasiado grande (máx. 3 MB).',
   resetToDefaults: 'Restablecer valores',
+
+  // ── Nombres accesibles ────────────────────────────────────────────────
+  editNamed: (name) => `Editar ${name}`,
+  deleteNamed: (name) => `Eliminar ${name}`,
+  renameNamed: (name) => `Cambiar el nombre de ${name}`,
+  addFolderIn: (name) => `Añadir carpeta en ${name}`,
+  addLinkIn: (name) => `Añadir marcador en ${name}`,
+  moveNamed: (name) => `Mover ${name}`,
+  iconNamed: (name) => `Icono: ${name}`,
+
+  moveTitle: (name) => `Mover «${name}»`,
+  moveDestination: 'Carpeta de destino',
+  moveToTopLevel: 'Nivel superior',
+  moveHere: 'Mover aquí',
+
+  landmarkHeader: 'Reloj y saludo',
+  landmarkShortcuts: 'Accesos directos',
+  landmarkBookmarks: 'Marcadores',
+  skipToBookmarks: 'Saltar a los marcadores',
+  clockLabel: (date, time, zone) => `Son las ${time} del ${date}, ${zone}.`,
 }
 
 export default es

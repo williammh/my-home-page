@@ -1,9 +1,12 @@
-# Simple workflow for deploying static content to GitHub Pages
+# Build, check and deploy the page to GitHub Pages.
 name: Deploy static content to Pages
 
 on:
   # Runs on pushes targeting the default branch
   push:
+    branches: ["main"]
+  # Checks run on PRs too, where there is nothing to deploy.
+  pull_request:
     branches: ["main"]
 
   # Allows you to run this workflow manually from the Actions tab
@@ -22,8 +25,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Single deploy job since we're just deploying
+  # Types, accessibility lint and the test suite. Deployment depends on this,
+  # so a page that fails its accessibility tests is never published.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Typecheck
+        run: npx tsc -b
+      - name: Lint (accessibility rules)
+        run: npm run lint
+      - name: Test
+        run: npm test
+
   deploy:
+    # Only after `check` passes.
+    needs: check
+    # Nothing to deploy from a pull request.
+    if: github.event_name != 'pull_request'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -31,6 +58,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install
+        run: npm ci
+      # Build here rather than shipping a committed `dist/`, so what is
+      # published is always built from the commit being deployed.
+      - name: Build
+        run: npm run build
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

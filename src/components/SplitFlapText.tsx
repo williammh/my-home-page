@@ -303,10 +303,6 @@ const SplitFlapText = ({
     };
   }, [normalizedPhrases, width, loop, cycleDelay, flipDuration, stagger, flipsPerChar, charset, prefersReducedMotion]);
 
-  const settledText = tiles
-    .map(tile => tile.current)
-    .join('')
-    .trimEnd();
   const componentStyle = {
     '--split-flap-tile-color': tileColor,
     '--split-flap-text-color': textColor,
@@ -321,8 +317,13 @@ const SplitFlapText = ({
     <div
       className={`split-flap-text ${className}`.trim()}
       style={componentStyle}
-      role="text"
-      aria-label={settledText || undefined}
+      // `role="text"` used to be here: it was dropped from the ARIA spec and
+      // only Safari honours it, so elsewhere the board fell back to being read
+      // one tile at a time. The board is decorative — every caller renders the
+      // same text accessibly nearby (the clock puts it in the paragraph's
+      // `aria-label`) — so it is hidden by default and a caller that needs it
+      // announced passes its own `aria-label`/`aria-hidden` through `...props`.
+      aria-hidden={props['aria-hidden'] ?? (props['aria-label'] ? undefined : 'true')}
       {...props}
     >
       {tiles.map((tile, index) => (

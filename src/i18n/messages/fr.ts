@@ -81,6 +81,26 @@ const fr: Messages = {
   imageUrlPlaceholder: 'https://exemple.com/image.jpg',
   imageTooLarge: 'L’image est trop volumineuse (3 Mo maximum).',
   resetToDefaults: 'Réinitialiser',
+
+  // ── Noms accessibles ──────────────────────────────────────────────────
+  editNamed: (name) => `Modifier ${name}`,
+  deleteNamed: (name) => `Supprimer ${name}`,
+  renameNamed: (name) => `Renommer ${name}`,
+  addFolderIn: (name) => `Ajouter un dossier dans ${name}`,
+  addLinkIn: (name) => `Ajouter un favori dans ${name}`,
+  moveNamed: (name) => `Déplacer ${name}`,
+  iconNamed: (name) => `Icône : ${name}`,
+
+  moveTitle: (name) => `Déplacer « ${name} »`,
+  moveDestination: 'Dossier de destination',
+  moveToTopLevel: 'Niveau supérieur',
+  moveHere: 'Déplacer ici',
+
+  landmarkHeader: 'Horloge et salutation',
+  landmarkShortcuts: 'Raccourcis',
+  landmarkBookmarks: 'Favoris',
+  skipToBookmarks: 'Aller aux favoris',
+  clockLabel: (date, time, zone) => `Il est ${time}, le ${date}, ${zone}.`,
 }
 
 export default fr
