@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
-import { FolderPlusIcon, PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
@@ -11,7 +11,13 @@ import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTr
 import { headlineCls } from './textTheme'
 import type { FolderNode, LinkNode, Settings } from './types'
 
-const gridCls = 'grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-3 max-[520px]:grid-cols-[repeat(auto-fill,minmax(94px,1fr))]'
+// Auto-fill sizes the columns from available width, but at a narrow viewport
+// it would settle on two or three cards a row. Below 520px the track count is
+// fixed at four instead — the floor asked for — and the cards shrink to fit;
+// `minmax(0,1fr)` (not the implicit `auto`) lets them go under their content
+// width so a long label can't push the row wider than the screen.
+const gridCls =
+  'grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-3 max-[520px]:gap-2 max-[520px]:grid-cols-[repeat(4,minmax(0,1fr))]'
 
 type Modal =
   | { kind: 'folder'; node?: FolderNode; target?: string | null }
@@ -25,6 +31,10 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null)  // folder highlighted in the tree
   const [modal, setModal] = useState<Modal | null>(null)
   const [query, setQuery] = useState('')
+  // Toggled by "Edit Shortcuts": while on, every shortcut card shows its
+  // edit/delete buttons without needing a hover, for touch screens and for
+  // seeing the whole grid's controls at once.
+  const [editingShortcuts, setEditingShortcuts] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -135,7 +145,7 @@ export default function App() {
           screen instead made the header and the bookmarks panel compete for a
           fixed budget, which clipped whichever lost through the middle of a
           card. */}
-      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-6 pb-[5vh] pt-[clamp(24px,9vh,96px)]">
+      <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-6 pb-[5vh] pt-[clamp(24px,9vh,96px)] max-[520px]:px-4">
         <div className="shrink-0">
           <Clock settings={settings} onOpenSettings={() => setModal({ kind: 'settings' })} />
           <SearchBar value={query} onChange={setQuery} />
@@ -155,9 +165,11 @@ export default function App() {
                     variant="glass"
                     size="sm"
                     className="rounded-lg"
-                    onClick={() => setModal({ kind: 'link', isShortcut: true })}
+                    aria-pressed={editingShortcuts}
+                    onClick={() => setEditingShortcuts((v) => !v)}
                   >
-                    <PlusIcon /> New Shortcut
+                    {editingShortcuts ? <CheckIcon /> : <PencilSquareIcon />}
+                    {editingShortcuts ? 'Done' : 'Edit Shortcuts'}
                   </Button>
                 )}
               </div>
@@ -168,11 +180,27 @@ export default function App() {
                     node={s}
                     query={trimmedQuery}
                     editable
+                    editing={editingShortcuts}
                     newTab={settings.openInNewTab}
                     onEdit={(node) => setModal({ kind: 'link', node, isShortcut: true })}
                     onRemove={removeShortcut}
                   />
                 ))}
+                {editingShortcuts && !trimmedQuery && (
+                  <button
+                    type="button"
+                    title="Add shortcut"
+                    onClick={() => setModal({ kind: 'link', isShortcut: true })}
+                    className="flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-current/25 px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-colors duration-150 hover:border-current/40 hover:bg-foreground/5 max-[520px]:min-h-[86px] max-[520px]:gap-1.5 max-[520px]:px-1 max-[520px]:pb-2.5 max-[520px]:pt-3"
+                  >
+                    <div className="flex size-[34px] items-center justify-center">
+                      <PlusIcon className="size-5" />
+                    </div>
+                    <span className="line-clamp-2 max-w-full text-center text-[12.5px] leading-tight max-[520px]:text-[11px]">
+                      Add Shortcut
+                    </span>
+                  </button>
+                )}
               </div>
             </section>
           )}

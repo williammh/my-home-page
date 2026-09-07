@@ -42,12 +42,12 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
   const name = settings.name.trim()
 
   return (
-    <div className="group/clock relative mb-8">
+    <div className="relative mb-8">
       <button
         type="button"
         title="Settings"
         onClick={onOpenSettings}
-        className="absolute -right-1 top-0 flex rounded-md p-1.5 text-muted-foreground opacity-0 transition-opacity duration-150 hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover/clock:opacity-100 [&_svg]:size-4"
+        className="absolute -right-1 top-0 flex rounded-md p-1.5 text-muted-foreground transition-colors duration-150 hover:bg-foreground/10 hover:text-foreground [&_svg]:size-4"
       ><Cog6ToothIcon /></button>
 
       {/* Salutation — the one piece of the header that's about the reader, so

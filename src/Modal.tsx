@@ -198,7 +198,7 @@ export function SettingsModal({
           <button type="button" className={segmentBtnCls(!glass)} onClick={() => setGlass(false)}>Off</button>
         </div>
         <p className="mt-1.5 text-xs text-muted-foreground">
-          Translucent, blurred surfaces for the clock, search bar, shortcuts and bookmarks.
+          Translucent, blurred surfaces for the clock, search bar and bookmarks.
         </p>
 
         <label className={labelCls}>Open links in</label>
