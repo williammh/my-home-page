@@ -147,7 +147,6 @@ export default function App() {
       <div className="mx-auto flex min-h-screen max-w-[1080px] flex-col px-6 pb-[5vh] pt-[clamp(24px,9vh,96px)] max-[520px]:px-4">
         <div className="shrink-0">
           <Clock settings={settings} onOpenSettings={() => setModal({ kind: 'settings' })} />
-          <SearchBar value={query} onChange={setQuery} />
 
           {(!trimmedQuery || matchedShortcuts.length > 0) && (
             <section className="mb-5">
@@ -203,6 +202,8 @@ export default function App() {
               </div>
             </section>
           )}
+
+          <SearchBar value={query} onChange={setQuery} />
         </div>
 
         <section className="flex min-h-[320px] flex-1 flex-col">
