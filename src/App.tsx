@@ -154,15 +154,21 @@ function AppBody({
   }
 
   return (
-    <>
+    <div className="relative min-h-dvh">
       {settings.backgroundImage ? (
         <div
-          className="fixed inset-0 -z-10 bg-cover bg-center"
+          className="absolute inset-0 -z-10 bg-cover bg-center"
           style={{ backgroundImage: `url(${settings.backgroundImage})` }}
         />
       ) : settings.backgroundColor ? (
-        <div className="fixed inset-0 -z-10" style={{ backgroundColor: settings.backgroundColor }} />
+        <div className="absolute inset-0 -z-10" style={{ backgroundColor: settings.backgroundColor }} />
       ) : null}
+      {/* `absolute`, not `fixed`: a `fixed` layer is pinned to the browser's
+          own viewport, so every time the mobile address bar shows or hides,
+          the layer is resized right along with it, which reads as a visible
+          jump. `absolute` inside this `min-h-dvh` wrapper is sized once
+          against the document instead, so it only grows if the content
+          itself grows past a full screen. */}
       {/* `min-h-*` rather than a fixed height: the page is a single-screen
           layout whenever it fits, but on a short or narrow viewport the
           content grows and the page scrolls normally. Pinning to exactly one
@@ -367,6 +373,6 @@ function AppBody({
           />
         )}
       </div>
-    </>
+    </div>
   )
 }
