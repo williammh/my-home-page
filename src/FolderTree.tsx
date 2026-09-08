@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
-import { FolderPlusIcon, PencilIcon, PencilSquareIcon, CheckIcon, TrashIcon, ArrowsUpDownIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PencilIcon, PencilSquareIcon, CheckIcon, TrashIcon, ArrowsUpDownIcon } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
 import { useI18n } from './i18n'
@@ -50,10 +50,18 @@ const INDENT = 20
  * visible 24px box and its hover treatment instead, so what lights up on
  * hover is exactly the icon's own square — the padding stays purely for hit
  * area and is never itself painted.
+ *
+ * `group/btn` — a *named* group — rather than a plain `group`: the row itself
+ * is also a `group` (see the folder row and root row below, used to reveal
+ * this whole button cluster on row hover), and Tailwind's `group-hover:`
+ * matches *any* ancestor `.group` being hovered, not just the nearest one.
+ * With a plain `group` here, hovering anywhere on the row lit up every
+ * button's inner box at once instead of just the one under the pointer.
+ * Naming this group scopes `group-hover/btn:` to this button alone.
  */
-const rowBtnCls = 'group flex size-6 -my-1 box-content items-center justify-center p-1'
+const rowBtnCls = 'group/btn flex size-6 -my-1 box-content items-center justify-center p-1'
 const rowInnerCls =
-  'flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover:bg-border group-hover:text-foreground [&_svg]:size-3.5'
+  'flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover/btn:bg-border group-hover/btn:text-foreground [&_svg]:size-3.5'
 
 /**
  * Root-row action button — the controls reached most often, so the hit area
@@ -67,10 +75,15 @@ const rowInnerCls =
  * to stand, because that is what separates one button's target from the next.
  * Cancelling it too (`-m-2`) would overlap adjacent 40px targets by 14px and
  * make taps near a boundary land on the wrong control.
+ *
+ * `group/btn`, not a plain `group`: same reasoning as `rowBtnCls` above — the
+ * root row is itself a `group`, and an unnamed `group-hover:` here would
+ * match that ancestor too, lighting up all three root buttons together on
+ * any row hover instead of individually.
  */
-const rootBtnCls = 'group flex size-6 -my-2 box-content items-center justify-center p-2'
+const rootBtnCls = 'group/btn flex size-6 -my-2 box-content items-center justify-center p-2'
 const rootInnerCls =
-  'flex size-6 items-center justify-center rounded-md text-foreground transition-colors group-hover:bg-border [&_svg]:size-3.5'
+  'flex size-6 items-center justify-center rounded-md text-foreground transition-colors group-hover/btn:bg-border [&_svg]:size-3.5'
 
 /** ids of every node that matches `query` by name, plus all of their ancestors. */
 function matchIds(nodes: BookmarkNode[], query: string, ancestors: string[] = []): Set<string> {
@@ -168,7 +181,7 @@ function Row({
   const folderNode = node.type === 'folder' ? node : null
   const isFolder = folderNode !== null
   const hasChildren = isFolder && folderNode.children.length > 0
-  const Icon = isFolder ? getIcon(folderNode.icon) : LinkGlyph
+  const Icon = isFolder ? getIcon(folderNode.icon) : BookmarkSimpleIcon
 
   return (
     <>

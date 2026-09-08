@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { STATIC_SHORTCUTS } from './shortcuts'
 import { ICONS } from './icons'
 import type { TreeNode, FolderNode, LinkNode, Settings } from './types'
+import defaultWallpaper from './default-wallpaper.png'
 
 const KEY = 'myhomepage.tree.v1'
 const SHORTCUTS_KEY = 'myhomepage.shortcuts.v1'
@@ -17,7 +18,7 @@ export const DEFAULT_SETTINGS: Settings = {
   locale: 'system',
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   dateFormat: 'long',
-  backgroundImage: '',
+  backgroundImage: defaultWallpaper,
   backgroundColor: DEFAULT_BACKGROUND_COLOR,
   textTheme: 'light',
   glass: true,

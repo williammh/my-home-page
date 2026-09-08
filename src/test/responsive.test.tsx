@@ -129,7 +129,7 @@ describe('touch targets', () => {
     // The inner span is what's actually 24px and actually paints on hover.
     const inner = del.firstElementChild as HTMLElement
     expect(inner.className).toContain('size-6')
-    expect(inner.className).toMatch(/group-hover:bg-/)
+    expect(inner.className).toMatch(/group-hover\/btn:bg-/)
   })
 
   it('gives the Bookmarks root row a full 40px hit area with the same unpainted-padding split', () => {
@@ -159,7 +159,7 @@ describe('touch targets', () => {
 
     const inner = toggle.firstElementChild as HTMLElement
     expect(inner.className).toContain('size-6')
-    expect(inner.className).toMatch(/group-hover:bg-/)
+    expect(inner.className).toMatch(/group-hover\/btn:bg-/)
   })
 
   it('gives the visible shortcut card buttons a 24px painted box at desktop width', () => {
