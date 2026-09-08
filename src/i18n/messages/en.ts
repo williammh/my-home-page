@@ -16,7 +16,7 @@
 const en = {
   // ── Greeting ──────────────────────────────────────────────────────────
   // Chosen by hour of day; see Greeting.tsx.
-  greetingNight: 'Good night',
+  greetingNight: 'Good evening',
   greetingMorning: 'Good morning',
   greetingAfternoon: 'Good afternoon',
   greetingEvening: 'Good evening',
