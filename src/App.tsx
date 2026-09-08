@@ -59,6 +59,41 @@ function AppBody({
   const [editingShortcuts, setEditingShortcuts] = useState(false)
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const backgroundRef = useRef<HTMLDivElement>(null)
+
+  // Parallax for the background image: on a narrow/short viewport the page
+  // itself can grow past one screen and scroll (see the `min-h-dvh` note
+  // below), and with a plain `absolute` background that scrolls in lockstep
+  // with the content, which reads as flat. `background-attachment: fixed`
+  // would give real parallax for free, but it's exactly what was ruled out
+  // for this layer — it's unreliable on mobile Safari and repaints on every
+  // address-bar show/hide. Driving a `translateY` off scroll position instead
+  // gets the same depth effect without depending on `fixed`.
+  //
+  // The image is scaled up 12% *vertically only* (`scale-y-[1.12]` below) so
+  // the parallax travel never uncovers a top/bottom edge: at most `document
+  // height - 100dvh` of scroll happens, moved at a fraction of that, and the
+  // extra 12% headroom covers it at any realistic content height. Scaling
+  // only the Y axis matters here — an isotropic `scale-[1.12]` widens the
+  // layer past the viewport too, since it's centered growth on both axes,
+  // which pushed the whole document's scrollable width out and caused an
+  // unwanted horizontal scrollbar site-wide.
+  useEffect(() => {
+    let raf = 0
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        if (backgroundRef.current) {
+          backgroundRef.current.style.transform = `translateY(${window.scrollY * 0.15}px)`
+        }
+      })
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      cancelAnimationFrame(raf)
+    }
+  }, [])
 
   // The glass treatment is driven by CSS variables keyed off `data-glass` on
   // <html> (see index.css), so toggling it is one attribute rather than a
@@ -156,7 +191,8 @@ function AppBody({
     <div className="relative min-h-dvh">
       {settings.backgroundImage ? (
         <div
-          className="absolute inset-0 -z-10 bg-cover bg-center"
+          ref={backgroundRef}
+          className="absolute inset-0 -z-10 scale-y-[1.12] bg-cover bg-center will-change-transform"
           style={{ backgroundImage: `url(${settings.backgroundImage})` }}
         />
       ) : settings.backgroundColor ? (
