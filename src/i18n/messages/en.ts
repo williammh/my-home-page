@@ -62,7 +62,7 @@ const en = {
   menu: 'Menu',
   addShortcut: 'Add shortcut',
   addFolder: 'Add folder',
-  addLink: 'Add link',
+  addLink: 'Add bookmark',
   newFolder: 'New folder',
   newBookmark: 'New bookmark',
   // One toggle governs both the shortcut grid and the tree, so it is named for
@@ -71,7 +71,7 @@ const en = {
   doneEditingShortcuts: 'Done editing',
   settingsMenuItem: 'Settings…',
   dropToTopLevel: 'Drop here to move to top level',
-  treeEmpty: 'Nothing here yet — add a folder or a bookmark.',
+  treeEmpty: 'Nothing here yet — add a bookmark.',
   // The query is quoted inside the message so a language can use its own
   // quotation marks — „so", «so» or 「so」 — rather than the ASCII pair.
   treeNoMatches: (query: string) => `No folders or bookmarks match "${query}".`,
@@ -88,8 +88,8 @@ const en = {
 
   // ── Folder / link modals ──────────────────────────────────────────────
   editFolder: 'Edit folder',
-  editLink: 'Edit link',
-  newLink: 'New link',
+  editLink: 'Edit bookmark',
+  newLink: 'New bookmark',
   fieldName: 'Name',
   fieldOptional: '(optional)',
   fieldIcon: 'Icon',
@@ -133,6 +133,10 @@ const en = {
   // reader user tabbing through a grid of shortcuts hears "Edit" fourteen
   // times otherwise. `title` stays for the mouse tooltip; these become the
   // `aria-label`.
+  // The overflow trigger that replaces separate edit/delete buttons on a
+  // narrow shortcut card — see Cards.tsx's `CardActionsMenu`.
+  cardActions: 'Actions',
+  cardActionsNamed: (name: string) => `Actions for ${name}`,
   editNamed: (name: string) => `Edit ${name}`,
   deleteNamed: (name: string) => `Delete ${name}`,
   renameNamed: (name: string) => `Rename ${name}`,

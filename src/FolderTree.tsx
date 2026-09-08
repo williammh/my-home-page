@@ -25,27 +25,52 @@ interface DragHandlerProps {
 const INDENT = 20
 
 /**
- * Row action button. `size-6` is 24px — the WCAG 2.2 (2.5.8) minimum target —
- * while the icon inside stays 14px, so the hit area grew without the row
- * getting visually heavier.
+ * Row action button. A folder row in edit mode can show up to five of these
+ * at once (add folder, add link, move, rename, delete) on a row that is also
+ * pushed over by its nesting level — `rootBtnCls`'s full 16px-per-side
+ * padding would need close to 200px just for buttons, which a nested or
+ * narrow row does not have.
+ *
+ * `size-6` (24px) stays the visual box, same as before. `p-1 -my-1` grows the
+ * *tap* target to 32px without widening the row's own footprint: the row's
+ * `py-2` (8px) already exists to clear the 24px button, so 4px of that is
+ * reclaimed as hit area on each side rather than left as dead space — safe
+ * for the same reason `rootBtnCls`'s larger version is (see below): the
+ * padding eats into the row's own whitespace, not into a sibling row's box.
+ * Horizontally, `gap-0.5` is replaced by the buttons' own padding doing that
+ * job — 8px between adjacent 32px targets, still clearing the 8px touch
+ * spacing minimum, in under half the width the full 40px treatment needs.
+ *
+ * The padding lives on the *outer* element only — `hover:bg-border` is not
+ * here, because a background on a padded box paints the padding too. That
+ * made the hover state itself look wrong: a highlighted square bigger than
+ * the icon, with visible empty space between the icon and the highlight's
+ * own edge, and that edge landing wherever the padding happened to end
+ * rather than at any intentional inset. `rowInnerCls` below carries the
+ * visible 24px box and its hover treatment instead, so what lights up on
+ * hover is exactly the icon's own square — the padding stays purely for hit
+ * area and is never itself painted.
  */
-const rowBtnCls =
-  'flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5'
+const rowBtnCls = 'group flex size-6 -my-1 box-content items-center justify-center p-1'
+const rowInnerCls =
+  'flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors group-hover:bg-border group-hover:text-foreground [&_svg]:size-3.5'
 
 /**
  * Root-row action button — the controls reached most often, so the hit area
  * clears the 40px touch target rather than only WCAG's 24px floor.
  *
- * The painted box stays 24px (`size-6` + `box-content` padding, so the
- * background and hover tint are unchanged) while `p-2` grows the target to
- * 40px. Only the *vertical* padding is cancelled by a negative margin: `-my-2`
+ * Same split as `rowBtnCls` above, at the larger size: this outer element is
+ * unpainted hit area only (`size-6` + `p-2` box-content padding = 40px),
+ * `rootInnerCls` is the visible 24px box that actually takes the hover tint.
+ * Only the *vertical* padding is cancelled by a negative margin: `-my-2`
  * keeps the row's height exactly as it was, but the horizontal padding is left
  * to stand, because that is what separates one button's target from the next.
  * Cancelling it too (`-m-2`) would overlap adjacent 40px targets by 14px and
  * make taps near a boundary land on the wrong control.
  */
-const rootBtnCls =
-  'flex size-6 -my-2 box-content items-center justify-center rounded-md p-2 text-foreground hover:bg-border [&_svg]:size-3.5'
+const rootBtnCls = 'group flex size-6 -my-2 box-content items-center justify-center p-2'
+const rootInnerCls =
+  'flex size-6 items-center justify-center rounded-md text-foreground transition-colors group-hover:bg-border [&_svg]:size-3.5'
 
 /** ids of every node that matches `query` by name, plus all of their ancestors. */
 function matchIds(nodes: BookmarkNode[], query: string, ancestors: string[] = []): Set<string> {
@@ -151,25 +176,28 @@ function Row({
       <TreeIcon icon={<Icon className="size-4" />} hasChildren={hasChildren} />
       <TreeLabel><Highlighted text={node.name} query={query} /></TreeLabel>
       {folderNode && (
-        <span className="ms-2 flex shrink-0 items-center gap-0.5">
+        // No `gap` here: each button carries its own 4px of padding (see
+        // `rowBtnCls`), which spaces the 32px tap targets apart the same way
+        // the root row's buttons space themselves with their own padding.
+        <span className="ms-2 flex shrink-0 items-center">
           <button
             type="button"
             title={t.addFolder}
             aria-label={t.addFolderIn(node.name)}
             className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'folder') }}
-          ><FolderPlusIcon /></button>
+          ><span className={rowInnerCls}><FolderPlusIcon /></span></button>
           <button
             type="button"
             title={t.addLink}
             aria-label={t.addLinkIn(node.name)}
             className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAdd(folderNode, 'link') }}
-          ><BookmarkSimpleIcon /></button>
+          ><span className={rowInnerCls}><BookmarkSimpleIcon /></span></button>
         </span>
       )}
       {editing && (
-        <span className="ms-2 flex shrink-0 items-center gap-0.5">
+        <span className="ms-2 flex shrink-0 items-center">
           {/* The keyboard path to what dragging does with a mouse. It lives in
               the edit affordance rather than always-on so the row stays quiet,
               and it is the only way to reorder without a pointer. */}
@@ -179,21 +207,21 @@ function Row({
             aria-label={t.moveNamed(node.name)}
             className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onMoveRequest(node) }}
-          ><ArrowsUpDownIcon /></button>
+          ><span className={rowInnerCls}><ArrowsUpDownIcon /></span></button>
           <button
             type="button"
             title={isFolder ? t.rename : t.edit}
             aria-label={isFolder ? t.renameNamed(node.name) : t.editNamed(node.name)}
             className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(node) }}
-          ><PencilIcon /></button>
+          ><span className={rowInnerCls}><PencilIcon /></span></button>
           <button
             type="button"
             title={t.delete}
             aria-label={t.deleteNamed(node.name)}
             className={rowBtnCls}
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); onRemove(node.id) }}
-          ><TrashIcon /></button>
+          ><span className={rowInnerCls}><TrashIcon /></span></button>
         </span>
       )}
     </>
@@ -445,7 +473,15 @@ export default function FolderTree({
       indent={INDENT}
       animateExpand={!trimmedQuery}
     >
-      <div ref={rootRef} {...rootDropProps} className="flex min-h-full flex-col rounded-lg">
+      {/* `flex-1 min-h-0`, not `min-h-full`: a percentage height only
+          resolves against an ancestor with a *definite* height, and nothing
+          up the chain (the scroll panel's own `motion.div` wrapper in
+          kibo-ui's TreeProvider included — see the comment there) reliably
+          has one. `flex-1` sidesteps that: it grows to fill whatever the
+          nearest flex ancestor actually has, which is what lets the empty
+          state below claim real height instead of collapsing to 0 and
+          rendering as a box hugging the top of the panel. */}
+      <div ref={rootRef} {...rootDropProps} className="flex min-h-0 flex-1 flex-col rounded-lg">
         {rootLabel && (
           // The synthetic root: named like a folder and pinned at the top of
           // the panel, so the tree reads as living *inside* "Bookmarks"
@@ -494,14 +530,14 @@ export default function FolderTree({
                     aria-label={t.newFolder}
                     className={rootBtnCls}
                     onClick={() => onAddRoot('folder')}
-                  ><FolderPlusIcon /></button>
+                  ><span className={rootInnerCls}><FolderPlusIcon /></span></button>
                   <button
                     type="button"
                     title={t.newBookmark}
                     aria-label={t.newBookmark}
                     className={rootBtnCls}
                     onClick={() => onAddRoot('link')}
-                  ><BookmarkSimpleIcon /></button>
+                  ><span className={rootInnerCls}><BookmarkSimpleIcon /></span></button>
                 </>
               )}
               {onToggleEditing && (
@@ -512,20 +548,25 @@ export default function FolderTree({
                   aria-pressed={editing}
                   className={rootBtnCls}
                   onClick={onToggleEditing}
-                >{editing ? <CheckIcon /> : <PencilSquareIcon />}</button>
+                ><span className={rootInnerCls}>{editing ? <CheckIcon /> : <PencilSquareIcon />}</span></button>
               )}
             </span>
           </div>
         )}
 
         {tree.length === 0 ? (
-          <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
+          // `flex-1` so the empty state fills whatever room the panel has —
+          // otherwise a tiny dashed box sits pinned to the top of a mostly
+          // empty glass panel, which reads as broken rather than as "there is
+          // genuinely nothing here yet." Centering both axes then reads as a
+          // deliberate placeholder rather than an unstyled fragment.
+          <div className="my-3 flex flex-1 items-center justify-center rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             {t.treeEmpty}
-          </p>
+          </div>
         ) : !hasResults ? (
-          <p className="my-3 rounded-xl border border-dashed border-border p-[34px] text-center text-sm text-muted-foreground">
+          <div className="my-3 flex flex-1 items-center justify-center rounded-xl border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             {t.treeNoMatches(trimmedQuery)}
-          </p>
+          </div>
         ) : (
           <TreeView role="tree" aria-label={rootLabel} className="px-0 pt-2">
             <Nodes

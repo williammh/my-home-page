@@ -29,7 +29,7 @@ const es: Messages = {
   menu: 'Menú',
   addShortcut: 'Añadir acceso directo',
   addFolder: 'Añadir carpeta',
-  addLink: 'Añadir enlace',
+  addLink: 'Añadir marcador',
   newFolder: 'Nueva carpeta',
   newBookmark: 'Nuevo marcador',
   editShortcuts: 'Editar accesos directos y marcadores',
@@ -46,8 +46,8 @@ const es: Messages = {
   exportEmpty: 'Todavía no hay nada que exportar.',
 
   editFolder: 'Editar carpeta',
-  editLink: 'Editar enlace',
-  newLink: 'Nuevo enlace',
+  editLink: 'Editar marcador',
+  newLink: 'Nuevo marcador',
   fieldName: 'Nombre',
   fieldOptional: '(opcional)',
   fieldIcon: 'Icono',
@@ -84,6 +84,8 @@ const es: Messages = {
   resetToDefaults: 'Restablecer valores',
 
   // ── Nombres accesibles ────────────────────────────────────────────────
+  cardActions: 'Acciones',
+  cardActionsNamed: (name) => `Acciones de ${name}`,
   editNamed: (name) => `Editar ${name}`,
   deleteNamed: (name) => `Eliminar ${name}`,
   renameNamed: (name) => `Cambiar el nombre de ${name}`,

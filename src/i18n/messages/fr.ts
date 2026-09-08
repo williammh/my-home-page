@@ -29,7 +29,7 @@ const fr: Messages = {
   menu: 'Menu',
   addShortcut: 'Ajouter un raccourci',
   addFolder: 'Ajouter un dossier',
-  addLink: 'Ajouter un lien',
+  addLink: 'Ajouter un favori',
   newFolder: 'Nouveau dossier',
   newBookmark: 'Nouveau favori',
   editShortcuts: 'Modifier les raccourcis et les favoris',
@@ -47,8 +47,8 @@ const fr: Messages = {
   exportEmpty: 'Rien à exporter pour l’instant.',
 
   editFolder: 'Modifier le dossier',
-  editLink: 'Modifier le lien',
-  newLink: 'Nouveau lien',
+  editLink: 'Modifier le favori',
+  newLink: 'Nouveau favori',
   fieldName: 'Nom',
   fieldOptional: '(facultatif)',
   fieldIcon: 'Icône',
@@ -85,6 +85,8 @@ const fr: Messages = {
   resetToDefaults: 'Réinitialiser',
 
   // ── Noms accessibles ──────────────────────────────────────────────────
+  cardActions: 'Actions',
+  cardActionsNamed: (name) => `Actions pour ${name}`,
   editNamed: (name) => `Modifier ${name}`,
   deleteNamed: (name) => `Supprimer ${name}`,
   renameNamed: (name) => `Renommer ${name}`,

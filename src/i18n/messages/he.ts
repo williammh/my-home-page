@@ -29,7 +29,7 @@ const he: Messages = {
   menu: 'תפריט',
   addShortcut: 'הוספת קיצור דרך',
   addFolder: 'הוספת תיקייה',
-  addLink: 'הוספת קישור',
+  addLink: 'הוספת סימנייה',
   newFolder: 'תיקייה חדשה',
   newBookmark: 'סימנייה חדשה',
   editShortcuts: 'עריכת קיצורי דרך וסימניות',
@@ -47,8 +47,8 @@ const he: Messages = {
   exportEmpty: 'עדיין אין מה לייצא.',
 
   editFolder: 'עריכת תיקייה',
-  editLink: 'עריכת קישור',
-  newLink: 'קישור חדש',
+  editLink: 'עריכת סימנייה',
+  newLink: 'סימנייה חדשה',
   fieldName: 'שם',
   fieldOptional: '(אופציונלי)',
   fieldIcon: 'סמל',
@@ -85,6 +85,8 @@ const he: Messages = {
   resetToDefaults: 'איפוס לברירת המחדל',
 
   // ── שמות נגישים ───────────────────────────────────────────────────────
+  cardActions: 'פעולות',
+  cardActionsNamed: (name) => `פעולות עבור ${name}`,
   editNamed: (name) => `עריכת ${name}`,
   deleteNamed: (name) => `מחיקת ${name}`,
   renameNamed: (name) => `שינוי השם של ${name}`,

@@ -52,6 +52,41 @@ describe('message catalogs', () => {
     }
   })
 
+  it('calls the item "bookmark", not "link", in every locale', () => {
+    // `addLink`/`editLink`/`newLink` are internal key names — they match the
+    // `LinkNode`/`LinkModal` types and the `'link'` discriminant they're
+    // named after — but the *rendered* text must say "bookmark": the app has
+    // one word for this item type, not two competing ones depending on which
+    // button you're looking at. Each locale's own former word for "link" is
+    // checked directly (a substring match on English "link" would pass
+    // Spanish/French/Japanese/Chinese/Arabic/Hebrew trivially, since none of
+    // them contain Latin "link" even when unfixed — that would make the test
+    // pass on the very regression it exists to catch).
+    //
+    // `fieldOpenLinksIn`/`openLinksHint` are deliberately exempt: that
+    // setting covers both shortcuts and bookmarks, so "link" there is the
+    // umbrella term for "things that navigate", not a name for the item.
+    // `fieldUrl`/`urlPlaceholder`/`linkNamePlaceholder` are exempt too — they
+    // label the URL field itself, not the item.
+    const formerLinkWord: Record<string, RegExp> = {
+      en: /\blink\b/i,
+      de: /\blink\b/i,
+      es: /enlace/i,
+      fr: /\blien\b/i,
+      ja: /リンク/,
+      zh: /链接/,
+      ar: /رابط/,
+      he: /קישור/,
+    }
+    for (const [tag, catalog] of Object.entries(CATALOGS)) {
+      const c = catalog as typeof en
+      const pattern = formerLinkWord[tag]
+      expect(c.addLink, `${tag}.addLink`).not.toMatch(pattern)
+      expect(c.editLink, `${tag}.editLink`).not.toMatch(pattern)
+      expect(c.newLink, `${tag}.newLink`).not.toMatch(pattern)
+    }
+  })
+
   it('interpolates every argument it is given', () => {
     // A translation that forgot `${name}` would lose the user's data with no
     // type error, since the signature still matches.

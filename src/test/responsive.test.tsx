@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithI18n, sampleTree } from './helpers'
 import FolderTree from '../FolderTree'
 import { LinkCard } from '../Cards'
@@ -91,8 +92,15 @@ describe('forced colors', () => {
 })
 
 describe('touch targets', () => {
-  // WCAG 2.2 (2.5.8) asks for at least 24x24 CSS px.
-  it('gives tree row buttons a 24px hit area', () => {
+  // WCAG 2.2 (2.5.8) asks for at least 24x24 CSS px of hit area; the row and
+  // root controls go further and pad out to a real touch target. The padding
+  // that does this lives on the *outer* button only — an inner span carries
+  // the 24px visible box and its hover background, so what highlights on
+  // hover is exactly the icon's square rather than the padded hit area (a
+  // background on the padded element paints the padding too, which looked
+  // like a stray gap next to the icon and didn't line up with anything else
+  // on the row).
+  it('pads the tree row button past its 24px visible box without painting the padding', () => {
     renderWithI18n(
       <FolderTree
         tree={sampleTree()}
@@ -109,12 +117,52 @@ describe('touch targets', () => {
         onAddRoot={() => {}}
       />
     )
-    // `size-6` is 24px; the previous `p-1` around a 14px icon was ~22px.
+    // `p-1 -my-1` (see `rowBtnCls` in FolderTree.tsx) grows the outer
+    // element's own border-box — its hit area — to 32px without widening the
+    // row, which a folder row showing up to five of these at once cannot
+    // spare the full 40px for. It carries no background/hover class itself.
     const del = screen.getByRole('button', { name: 'Delete Work' })
-    expect(del.className).toContain('size-6')
+    expect(del.className).toContain('p-1')
+    expect(del.className).toContain('-my-1')
+    expect(del.className).not.toMatch(/hover:bg-/)
+
+    // The inner span is what's actually 24px and actually paints on hover.
+    const inner = del.firstElementChild as HTMLElement
+    expect(inner.className).toContain('size-6')
+    expect(inner.className).toMatch(/group-hover:bg-/)
   })
 
-  it('gives shortcut card buttons a 24px hit area', () => {
+  it('gives the Bookmarks root row a full 40px hit area with the same unpainted-padding split', () => {
+    renderWithI18n(
+      <FolderTree
+        tree={sampleTree()}
+        selectedId={null}
+        newTab={false}
+        editing
+        onEdit={() => {}}
+        onRemove={() => {}}
+        onAdd={() => {}}
+        onMove={() => {}}
+        onMoveRequest={() => {}}
+        onSelect={() => {}}
+        rootLabel="Bookmarks"
+        onAddRoot={() => {}}
+        onToggleEditing={() => {}}
+      />
+    )
+    // The root row is reached most often, so unlike a tree row it gets the
+    // full touch-target padding rather than the row's reduced version.
+    const toggle = screen.getByRole('button', { name: 'Done editing' })
+    expect(toggle.className).toContain('p-2')
+    expect(toggle.className).toContain('-my-2')
+    expect(toggle.className).not.toMatch(/hover:bg-/)
+
+    const inner = toggle.firstElementChild as HTMLElement
+    expect(inner.className).toContain('size-6')
+    expect(inner.className).toMatch(/group-hover:bg-/)
+  })
+
+  it('gives the visible shortcut card buttons a 24px painted box at desktop width', () => {
     renderWithI18n(
       <LinkCard
         node={{ id: 's1', type: 'link', name: 'GitHub', url: 'https://github.com' }}
@@ -124,7 +172,54 @@ describe('touch targets', () => {
         onRemove={() => {}}
       />
     )
-    expect(screen.getByRole('button', { name: 'Edit GitHub' }).className).toContain('size-6')
+    // Below 520px this pair is replaced by a single overflow trigger (see the
+    // next describe block) — jsdom does not evaluate the `max-[520px]:hidden`
+    // media query, so both variants exist in the DOM here; `getAllByRole`
+    // rather than `getByRole` acknowledges that instead of accidentally
+    // depending on it.
+    const edits = screen.getAllByRole('button', { name: 'Edit GitHub' })
+    expect(edits.length).toBeGreaterThan(0)
+    for (const btn of edits) expect(btn.className).toContain('size-6')
+  })
+})
+
+describe('card actions overflow', () => {
+  it('replaces edit/delete with a single labelled menu trigger below 520px', async () => {
+    const user = userEvent.setup()
+    renderWithI18n(
+      <LinkCard
+        node={{ id: 's1', type: 'link', name: 'GitHub', url: 'https://github.com' }}
+        editable
+        editing
+        onEdit={() => {}}
+        onRemove={() => {}}
+      />
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Actions for GitHub' })
+    // The narrow-width variant's container carries the class that reveals it
+    // only under max-[520px]; the wide variant's sibling carries the inverse,
+    // so at any single width exactly one is meant to be visible.
+    expect(trigger.closest('.hidden')?.className).toContain('max-[520px]:flex')
+
+    await user.click(trigger)
+    expect(await screen.findByRole('menuitem', { name: 'Edit' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Delete' })).toBeInTheDocument()
+  })
+
+  it('routes the overflow menu items to the same onEdit/onRemove as the wide buttons', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+    const onRemove = vi.fn()
+    const node = { id: 's1', type: 'link' as const, name: 'GitHub', url: 'https://github.com' }
+    renderWithI18n(
+      <LinkCard node={node} editable editing onEdit={onEdit} onRemove={onRemove} />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Actions for GitHub' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Delete' }))
+    expect(onRemove).toHaveBeenCalledWith('s1')
+    expect(onEdit).not.toHaveBeenCalled()
   })
 })
 
@@ -144,5 +239,69 @@ describe('logical properties', () => {
       const physical = contents.match(/["'\s](?:pl|pr|ml|mr)-\d[^\w-]/g)
       expect(physical, `${file} uses physical spacing utilities`).toBeNull()
     }
+  })
+})
+
+describe('bookmarks empty state', () => {
+  it('fills the remaining panel height instead of sitting pinned at the top', () => {
+    const { container } = renderWithI18n(
+      <FolderTree
+        tree={[]}
+        selectedId={null}
+        newTab={false}
+        onEdit={() => {}}
+        onRemove={() => {}}
+        onAdd={() => {}}
+        onMove={() => {}}
+        onMoveRequest={() => {}}
+        onSelect={() => {}}
+        rootLabel="Bookmarks"
+        onAddRoot={() => {}}
+      />
+    )
+    // A dashed box pinned to the top of an otherwise-empty glass panel reads
+    // as broken rather than "nothing here yet" — `flex-1` on the empty state
+    // is necessary but not sufficient: it only has something to grow into if
+    // every ancestor up to the scroll panel also participates in the flex
+    // chain. `min-h-full` on FolderTree's own wrapper looked right but wasn't
+    // — a percentage height needs a *definite*-height ancestor to resolve
+    // against, and kibo-ui's TreeProvider wrapper (a plain `w-full` block,
+    // outside this file) broke that chain silently: every class assertion on
+    // this component alone still passed while the empty state rendered at
+    // its content height. So this checks the whole chain — FolderTree's root
+    // div AND the TreeProvider wrapper it renders inside — rather than one
+    // link of it.
+    const empty = screen.getByText('Nothing here yet — add a bookmark.')
+    expect(empty.className).toContain('flex-1')
+
+    const folderTreeRoot = empty.closest('.rounded-lg')
+    expect(folderTreeRoot?.className).toContain('flex-1')
+    expect(folderTreeRoot?.className).toContain('min-h-0')
+
+    const providerWrapper = folderTreeRoot?.parentElement
+    expect(providerWrapper?.className).toContain('flex-1')
+    expect(providerWrapper?.className).toContain('min-h-0')
+    expect(container.contains(providerWrapper as Node)).toBe(true)
+  })
+
+  it('also fills the panel for a search with no matches', () => {
+    renderWithI18n(
+      <FolderTree
+        tree={sampleTree()}
+        query="nonexistent-xyz"
+        selectedId={null}
+        newTab={false}
+        onEdit={() => {}}
+        onRemove={() => {}}
+        onAdd={() => {}}
+        onMove={() => {}}
+        onMoveRequest={() => {}}
+        onSelect={() => {}}
+        rootLabel="Bookmarks"
+        onAddRoot={() => {}}
+      />
+    )
+    const empty = screen.getByText('No folders or bookmarks match "nonexistent-xyz".')
+    expect(empty.className).toContain('flex-1')
   })
 })

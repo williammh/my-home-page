@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
-import { LinkCard } from './Cards'
+import { LinkCard, cardBase, cardIconSlotCls, cardLabelCls } from './Cards'
 import FolderTree from './FolderTree'
 import { FolderModal, LinkModal, MoveModal, SettingsModal } from './Modal'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
@@ -232,18 +232,25 @@ function AppBody({
                     onRemove={removeShortcut}
                   />
                 ))}
-                {editingShortcuts && !trimmedQuery && (
+                {/* Ungated on `editingShortcuts`, matching the Bookmarks root
+                    row: adding is always available there too, and only
+                    move/rename/delete need the edit toggle. Edit mode moved
+                    off this section entirely (see the toggle's own comment
+                    above) — gating "add" behind it as well would make
+                    "add a shortcut" depend on a control that no longer lives
+                    anywhere near this grid. */}
+                {!trimmedQuery && (
                   <button
                     type="button"
                     title={t.addShortcut}
                     aria-label={t.addShortcut}
                     onClick={() => setModal({ kind: 'link', isShortcut: true })}
-                    className="flex min-h-[108px] flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed border-current/25 px-2.5 pb-[17px] pt-5 text-foreground no-underline transition-colors duration-150 hover:border-current/40 hover:bg-foreground/5 max-[520px]:min-h-[86px] max-[520px]:gap-1.5 max-[520px]:px-1 max-[520px]:pb-2.5 max-[520px]:pt-3"
+                    className={`border border-dashed border-current/25 ${cardBase} hover:border-current/40 hover:bg-foreground/5`}
                   >
-                    <div className="flex size-[34px] items-center justify-center">
+                    <div className={cardIconSlotCls}>
                       <PlusIcon className="size-5" />
                     </div>
-                    <span className="line-clamp-2 max-w-full text-center text-[12.5px] leading-tight max-[520px]:text-[11px]">
+                    <span className={cardLabelCls}>
                       {t.addShortcut}
                     </span>
                   </button>

@@ -144,14 +144,18 @@ export const TreeProvider = ({
         animateExpand,
       }}
     >
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className={cn("w-full", className)}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      >
+      {/* `flex min-h-0 flex-col`, not just `w-full`: the caller's own root
+          element (FolderTree.tsx) is a flex column that needs to stretch to
+          fill its scrolling ancestor so an empty-state child can grow into
+          the remaining height with `flex-1`. Without this, this div sizes to
+          its content like any block box, which breaks that chain — a
+          percentage or flex-grow height on anything inside has nothing
+          resolvable to grow against. `min-h-0` (not the default `min-h-auto`
+          flex items get) lets it actually shrink to fit the scroll
+          container instead of forcing the container to grow around it. */}
+      <div className={cn("flex min-h-0 w-full flex-1 flex-col", className)}>
         {children}
-      </motion.div>
+      </div>
     </TreeContext.Provider>
   );
 };

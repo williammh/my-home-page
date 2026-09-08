@@ -45,7 +45,7 @@ export default function SearchBar({ value, onChange }: { value: string; onChange
         placeholder={t.searchPlaceholder}
         spellCheck="false"
         autoComplete="off"
-        className="glass glass-focus w-full rounded-lg py-[15px] ps-[50px] pe-11 text-base text-foreground placeholder:text-foreground/70 outline-none transition-[border-color,box-shadow,background-color] duration-150"
+        className="glass glass-focus w-full rounded-lg py-3.5 ps-[50px] pe-11 text-base text-foreground placeholder:text-foreground/70 outline-none transition-[border-color,box-shadow,background-color] duration-150"
       />
       {value && (
         <button

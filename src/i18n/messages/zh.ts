@@ -29,7 +29,7 @@ const zh: Messages = {
   menu: '菜单',
   addShortcut: '添加快捷方式',
   addFolder: '添加文件夹',
-  addLink: '添加链接',
+  addLink: '添加书签',
   newFolder: '新建文件夹',
   newBookmark: '新建书签',
   editShortcuts: '编辑快捷方式和书签',
@@ -47,8 +47,8 @@ const zh: Messages = {
   exportEmpty: '暂无可导出的内容。',
 
   editFolder: '编辑文件夹',
-  editLink: '编辑链接',
-  newLink: '新建链接',
+  editLink: '编辑书签',
+  newLink: '新建书签',
   fieldName: '名称',
   fieldOptional: '（可选）',
   fieldIcon: '图标',
@@ -85,6 +85,8 @@ const zh: Messages = {
   resetToDefaults: '恢复默认设置',
 
   // ── 无障碍名称 ────────────────────────────────────────────────────────
+  cardActions: '操作',
+  cardActionsNamed: (name) => `${name}的操作`,
   editNamed: (name) => `编辑${name}`,
   deleteNamed: (name) => `删除${name}`,
   renameNamed: (name) => `重命名${name}`,

@@ -147,7 +147,7 @@ function Shell({ title, onClose, children }: { title: string; onClose: () => voi
         onKeyDown={onKeyDown}
         className="scroll-themed max-h-[88dvh] w-full max-w-[430px] overflow-y-auto rounded-2xl border border-border bg-background p-6 shadow-2xl outline-none"
       >
-        <h2 id={titleId} className="mb-[18px] text-[17px] font-semibold">{title}</h2>
+        <h2 id={titleId} className="mb-5 text-[17px] font-semibold">{title}</h2>
         {children}
       </div>
     </div>
@@ -213,7 +213,7 @@ export function FolderModal({
         </div>
         </fieldset>
 
-        <div className="mt-[22px] flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
           <Button type="submit">{t.save}</Button>
         </div>
@@ -227,8 +227,10 @@ export function FolderModal({
 const MAX_BACKGROUND_FILE_BYTES = 3 * 1024 * 1024
 
 const segmentedCls = 'inline-flex rounded-lg border border-border bg-card p-0.5'
+// `min-h-11` (44px) so each segment clears the touch target minimum — at
+// `py-1.5` this was ~34px tall, the shortest tappable control in the app.
 const segmentBtnCls = (active: boolean) =>
-  `rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${
+  `flex min-h-11 items-center rounded-md px-3 text-sm font-medium transition-colors ${
     active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
   }`
 
@@ -451,7 +453,7 @@ export function SettingsModal({
           </div>
         )}
 
-        <div className="mt-[22px] flex items-center justify-between gap-2">
+        <div className="mt-6 flex items-center justify-between gap-2">
           <Button type="button" variant="ghost" onClick={resetToDefaults}>{t.resetToDefaults}</Button>
           <div className="flex gap-2">
             <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
@@ -490,12 +492,12 @@ export function LinkModal({
     <Shell title={initial ? t.editLink : t.newLink} onClose={onClose}>
       <form onSubmit={save}>
         <label htmlFor={`${id}-url`} className={labelCls}>{t.fieldUrl}</label>
-        <input id={`${id}-url`} type="url" inputMode="url" autoFocus value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t.urlPlaceholder} spellCheck="false" className={inputCls} />
+        <input id={`${id}-url`} type="text" inputMode="url" autoFocus value={url} onChange={(e) => setUrl(e.target.value)} placeholder={t.urlPlaceholder} spellCheck="false" className={inputCls} />
 
         <label htmlFor={`${id}-name`} className={labelCls}>{t.fieldName} <span className="font-normal normal-case tracking-normal opacity-70">{t.fieldOptional}</span></label>
         <input id={`${id}-name`} value={name} onChange={(e) => setName(e.target.value)} placeholder={t.linkNamePlaceholder} className={inputCls} />
 
-        <div className="mt-[22px] flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
           <Button type="submit">{t.save}</Button>
         </div>
@@ -572,7 +574,7 @@ export function MoveModal({
           ))}
         </select>
 
-        <div className="mt-[22px] flex justify-end gap-2">
+        <div className="mt-6 flex justify-end gap-2">
           <Button type="button" variant="outline" onClick={onClose}>{t.cancel}</Button>
           <Button type="submit">{t.moveHere}</Button>
         </div>

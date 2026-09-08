@@ -102,14 +102,19 @@ export function countNodes(nodes: TreeNode[]): number {
   )
 }
 
+// What a fresh load gets, same idea as `DEFAULT_SHORTCUTS` for the shortcut grid.
+const DEFAULT_BOOKMARKS: TreeNode[] = [
+  { id: 'default-bookmark-0', type: 'link', name: 'williammh.github.io', url: 'https://williammh.github.io' },
+]
+
 function load(): TreeNode[] {
   try {
     const raw = localStorage.getItem(KEY)
-    if (!raw) return []
+    if (!raw) return DEFAULT_BOOKMARKS
     const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed) ? parsed : DEFAULT_BOOKMARKS
   } catch {
-    return []
+    return DEFAULT_BOOKMARKS
   }
 }
 

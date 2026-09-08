@@ -105,3 +105,34 @@ describe('axe: header menu popup', () => {
     })
   }
 })
+
+/**
+ * Same reasoning as the header menu above: the card's narrow-width overflow
+ * trigger opens a portaled popup that the `screens` scan at the top of this
+ * file never sees, because it only exists once a viewer opens it.
+ */
+describe('axe: card actions menu popup', () => {
+  for (const locale of ['en', 'ar']) {
+    it(`has no violations when open (${locale})`, async () => {
+      const user = userEvent.setup()
+      renderWithI18n(
+        <LinkCard
+          node={{ id: 's1', type: 'link', name: 'GitHub', url: 'https://github.com' }}
+          editable
+          editing
+          onEdit={noop}
+          onRemove={noop}
+        />,
+        { locale }
+      )
+      // Locale-independent: `name` would need Arabic text here, unlike the
+      // header menu's fixed "Menu" trigger. `aria-haspopup` is unique to the
+      // menu trigger among this card's buttons (Edit/Delete are plain).
+      const trigger = document.querySelector('button[aria-haspopup]') as HTMLElement
+      await user.click(trigger)
+      const popup = (await screen.findAllByRole('menuitem'))[0].closest('[role="menu"]')
+      expect(popup!.querySelectorAll('[role="menuitem"]')).toHaveLength(2)
+      expect(await axe(popup as HTMLElement)).toHaveNoViolations()
+    })
+  }
+})

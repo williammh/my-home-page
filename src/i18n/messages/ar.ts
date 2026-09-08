@@ -31,7 +31,7 @@ const ar: Messages = {
   menu: 'القائمة',
   addShortcut: 'إضافة اختصار',
   addFolder: 'إضافة مجلد',
-  addLink: 'إضافة رابط',
+  addLink: 'إضافة إشارة مرجعية',
   newFolder: 'مجلد جديد',
   newBookmark: 'إشارة مرجعية جديدة',
   editShortcuts: 'تعديل الاختصارات والإشارات المرجعية',
@@ -66,8 +66,8 @@ const ar: Messages = {
   exportEmpty: 'لا يوجد شيء للتصدير بعد.',
 
   editFolder: 'تعديل المجلد',
-  editLink: 'تعديل الرابط',
-  newLink: 'رابط جديد',
+  editLink: 'تعديل الإشارة المرجعية',
+  newLink: 'إشارة مرجعية جديدة',
   fieldName: 'الاسم',
   fieldOptional: '(اختياري)',
   fieldIcon: 'الأيقونة',
@@ -104,6 +104,8 @@ const ar: Messages = {
   resetToDefaults: 'إعادة التعيين إلى الافتراضي',
 
   // ── الأسماء الوصفية لقارئات الشاشة ────────────────────────────────────
+  cardActions: 'الإجراءات',
+  cardActionsNamed: (name) => `إجراءات ${name}`,
   editNamed: (name) => `تحرير ${name}`,
   deleteNamed: (name) => `حذف ${name}`,
   renameNamed: (name) => `إعادة تسمية ${name}`,

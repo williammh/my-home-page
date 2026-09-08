@@ -29,7 +29,7 @@ const de: Messages = {
   menu: 'Menü',
   addShortcut: 'Verknüpfung hinzufügen',
   addFolder: 'Ordner hinzufügen',
-  addLink: 'Link hinzufügen',
+  addLink: 'Lesezeichen hinzufügen',
   newFolder: 'Neuer Ordner',
   newBookmark: 'Neues Lesezeichen',
   editShortcuts: 'Verknüpfungen und Lesezeichen bearbeiten',
@@ -46,8 +46,8 @@ const de: Messages = {
   exportEmpty: 'Noch nichts zum Exportieren vorhanden.',
 
   editFolder: 'Ordner bearbeiten',
-  editLink: 'Link bearbeiten',
-  newLink: 'Neuer Link',
+  editLink: 'Lesezeichen bearbeiten',
+  newLink: 'Neues Lesezeichen',
   fieldName: 'Name',
   fieldOptional: '(optional)',
   fieldIcon: 'Symbol',
@@ -84,6 +84,8 @@ const de: Messages = {
   resetToDefaults: 'Auf Standard zurücksetzen',
 
   // ── Barrierefreie Namen ───────────────────────────────────────────────
+  cardActions: 'Aktionen',
+  cardActionsNamed: (name) => `Aktionen für ${name}`,
   editNamed: (name) => `${name} bearbeiten`,
   deleteNamed: (name) => `${name} löschen`,
   renameNamed: (name) => `${name} umbenennen`,

@@ -33,7 +33,7 @@ const ja: Messages = {
   menu: 'メニュー',
   addShortcut: 'ショートカットを追加',
   addFolder: 'フォルダを追加',
-  addLink: 'リンクを追加',
+  addLink: 'ブックマークを追加',
   newFolder: '新しいフォルダ',
   newBookmark: '新しいブックマーク',
   editShortcuts: 'ショートカットとブックマークを編集',
@@ -51,8 +51,8 @@ const ja: Messages = {
   exportEmpty: 'エクスポートできるものがまだありません。',
 
   editFolder: 'フォルダを編集',
-  editLink: 'リンクを編集',
-  newLink: '新しいリンク',
+  editLink: 'ブックマークを編集',
+  newLink: '新しいブックマーク',
   fieldName: '名前',
   fieldOptional: '(任意)',
   fieldIcon: 'アイコン',
@@ -89,6 +89,8 @@ const ja: Messages = {
   resetToDefaults: '既定値に戻す',
 
   // ── アクセシブルな名前 ────────────────────────────────────────────────
+  cardActions: '操作',
+  cardActionsNamed: (name) => `${name} の操作`,
   editNamed: (name) => `${name} を編集`,
   deleteNamed: (name) => `${name} を削除`,
   renameNamed: (name) => `${name} の名前を変更`,
