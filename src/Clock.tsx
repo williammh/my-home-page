@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import HeaderMenu from './HeaderMenu'
 import SplitFlapText from './components/SplitFlapText'
 import { greetingFor } from './Greeting'
 import { dateFormatOptions } from './dateFormats'
@@ -7,17 +6,7 @@ import { useI18n } from './i18n'
 import { headlineCls, headlineStrongCls } from './textTheme'
 import type { Settings } from './types'
 
-export default function Clock({
-  settings,
-  onOpenSettings,
-  onImport,
-  onExport,
-}: {
-  settings: Settings
-  onOpenSettings: () => void
-  onImport: () => void
-  onExport: () => void
-}) {
+export default function Clock({ settings }: { settings: Settings }) {
   const [now, setNow] = useState(() => new Date())
   const prevTime = useRef<string | null>(null)
 
@@ -65,12 +54,10 @@ export default function Clock({
   const name = settings.name.trim()
 
   return (
-    <div className="relative mb-8">
-      <HeaderMenu onOpenSettings={onOpenSettings} onImport={onImport} onExport={onExport} />
-
+    <div className="mb-8">
       {/* Salutation — the one piece of the header that's about the reader, so
           it carries the weight; the clock sentence underneath is supporting. */}
-      <h1 className={`text-[clamp(28px,5vw,44px)] font-semibold leading-[1.1] tracking-tight ${headlineStrongCls(settings.textTheme)}`}>
+      <h1 className={`[text-shadow:0_1px_2px_rgb(0_0_0/0.7),0_1px_6px_rgb(0_0_0/0.5)] text-[clamp(28px,5vw,44px)] font-semibold leading-[1.1] tracking-tight ${headlineStrongCls(settings.textTheme)}`}>
         {/* Whole-sentence salutation from the catalog: a language that needs
             the name first, or different punctuation, changes only its own
             message rather than this markup. The name is emphasized by
@@ -120,7 +107,7 @@ export default function Clock({
           live region here would announce the time endlessly, drowning out the
           rest of the page. The time is read on demand instead — which is how
           a clock on a wall works too. */}
-      <p className={`mt-2.5 flex flex-wrap items-baseline gap-x-[0.4em] gap-y-1.5 text-[clamp(13px,1.7vw,17px)] leading-snug ${headlineCls(settings.textTheme)}`}>
+      <p className={`[text-shadow:0_1px_3px_rgb(0_0_0/0.95),0_2px_9px_rgb(0_0_0/0.75)] mt-2.5 flex flex-wrap items-baseline gap-x-[0.4em] gap-y-1.5 text-[clamp(13px,1.7vw,17px)] font-semibold leading-snug ${headlineCls(settings.textTheme)}`}>
         <span className="sr-only">
           {t.clockLabel(date, meridiem ? `${time} ${meridiem}` : time, timeZoneName)}
         </span>

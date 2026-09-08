@@ -81,7 +81,6 @@ const he: Messages = {
   chooseFromDevice: 'בחירה מהמכשיר',
   imageSelected: 'נבחרה תמונה מהמכשיר הזה',
   imageUrlPlaceholder: 'https://example.com/image.jpg',
-  imageTooLarge: 'התמונה גדולה מדי (3MB לכל היותר).',
   resetToDefaults: 'איפוס לברירת המחדל',
 
   // ── שמות נגישים ───────────────────────────────────────────────────────

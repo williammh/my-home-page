@@ -100,7 +100,6 @@ const ar: Messages = {
   chooseFromDevice: 'الاختيار من الجهاز',
   imageSelected: 'تم اختيار صورة من هذا الجهاز',
   imageUrlPlaceholder: 'https://example.com/image.jpg',
-  imageTooLarge: 'الصورة كبيرة جدًا (3 ميغابايت كحد أقصى).',
   resetToDefaults: 'إعادة التعيين إلى الافتراضي',
 
   // ── الأسماء الوصفية لقارئات الشاشة ────────────────────────────────────

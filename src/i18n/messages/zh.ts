@@ -81,7 +81,6 @@ const zh: Messages = {
   chooseFromDevice: '从设备选择',
   imageSelected: '已从此设备选择图片',
   imageUrlPlaceholder: 'https://example.com/image.jpg',
-  imageTooLarge: '图片太大（最大 3 MB）。',
   resetToDefaults: '恢复默认设置',
 
   // ── 无障碍名称 ────────────────────────────────────────────────────────

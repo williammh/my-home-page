@@ -80,7 +80,6 @@ const de: Messages = {
   chooseFromDevice: 'Vom Gerät auswählen',
   imageSelected: 'Bild von diesem Gerät ausgewählt',
   imageUrlPlaceholder: 'https://beispiel.de/bild.jpg',
-  imageTooLarge: 'Das Bild ist zu groß (max. 3 MB).',
   resetToDefaults: 'Auf Standard zurücksetzen',
 
   // ── Barrierefreie Namen ───────────────────────────────────────────────

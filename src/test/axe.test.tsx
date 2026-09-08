@@ -33,7 +33,7 @@ const screens = {
     />
   ),
   'search bar': <SearchBar value="" onChange={noop} />,
-  clock: <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />,
+  clock: <Clock settings={testSettings()} />,
   'folder tree': (
     <FolderTree
       tree={sampleTree()}

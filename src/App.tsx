@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
+import HeaderMenu from './HeaderMenu'
 import SearchBar from './SearchBar'
 import { LinkCard, cardBase, cardIconSlotCls, cardLabelCls } from './Cards'
 import FolderTree from './FolderTree'
@@ -188,13 +189,45 @@ function AppBody({
   }
 
   return (
-    <div className="relative min-h-dvh">
-      {settings.backgroundImage ? (
-        <div
-          ref={backgroundRef}
-          className="absolute inset-0 -z-10 scale-y-[1.12] bg-cover bg-center will-change-transform"
-          style={{ backgroundImage: `url(${settings.backgroundImage})` }}
+    <div className="relative min-h-dvh [--page-gutter:24px] max-[520px]:[--page-gutter:16px]">
+      {/* `fixed` to the browser viewport itself, not the `max-w-[1080px]`
+          content column: the column centers and gutters on a wide screen, so
+          anything positioned against *it* sits in the corner of the column,
+          not the window. Pinned to the actual viewport corner with the page
+          gutter on both axes — it does not track the greeting's vertical
+          position — and `env(safe-area-inset-*)` keeps it clear of a notch. */}
+      <div
+        className="fixed z-40"
+        style={{
+          top: 'max(var(--page-gutter), env(safe-area-inset-top))',
+          insetInlineEnd: 'max(var(--page-gutter), env(safe-area-inset-right))',
+        }}
+      >
+        <HeaderMenu
+          onOpenSettings={() => setModal({ kind: 'settings' })}
+          onImport={() => fileInputRef.current?.click()}
+          onExport={onExport}
         />
+      </div>
+      {settings.backgroundImage ? (
+        // The wrapper here (not the `-z-10` layer itself) carries
+        // `overflow-hidden`: the layer inside is scaled 12% taller than this
+        // box so the parallax translate below never uncovers a top/bottom
+        // edge, but a *scaled* box still contributes its full transformed
+        // size to this box's scrollable overflow — without clipping it here,
+        // that extra 12% forced vertical scroll even when the real content
+        // fit in exactly one screen. `absolute inset-0` on the outer wrapper
+        // means this div itself never grows past its parent, so clipping it
+        // can't cut off genuine page overflow (the case where content is
+        // taller than `min-h-dvh` and the *page* is meant to scroll) — that
+        // overflow happens on the parent, one level up, which stays unclipped.
+        <div className="absolute inset-0 -z-10 overflow-hidden">
+          <div
+            ref={backgroundRef}
+            className="absolute inset-0 scale-y-[1.12] bg-cover bg-center will-change-transform"
+            style={{ backgroundImage: `url(${settings.backgroundImage})` }}
+          />
+        </div>
       ) : settings.backgroundColor ? (
         <div className="absolute inset-0 -z-10" style={{ backgroundColor: settings.backgroundColor }} />
       ) : null}
@@ -217,7 +250,7 @@ function AppBody({
           as it actually is. The safe-area insets keep content clear of a
           notch in landscape and the home indicator at the bottom. */}
       <div
-        className="mx-auto flex min-h-dvh max-w-[1080px] flex-col pt-[clamp(24px,9vh,96px)] [--page-gutter:24px] max-[520px]:[--page-gutter:16px]"
+        className="mx-auto flex min-h-dvh max-w-[1080px] flex-col pt-[clamp(24px,9vh,96px)]"
         style={{
           // `max()` of the design's gutter and the device's own inset, so a
           // notch in landscape widens the padding but never narrows it.
@@ -236,12 +269,7 @@ function AppBody({
           {t.skipToBookmarks}
         </a>
         <header className="shrink-0" aria-label={t.landmarkHeader}>
-          <Clock
-            settings={settings}
-            onOpenSettings={() => setModal({ kind: 'settings' })}
-            onImport={() => fileInputRef.current?.click()}
-            onExport={onExport}
-          />
+          <Clock settings={settings} />
 
           {(!trimmedQuery || matchedShortcuts.length > 0) && (
             <section className="mb-5" aria-labelledby="shortcuts-heading">

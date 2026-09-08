@@ -5,6 +5,7 @@ import { renderWithI18n, testSettings, sampleTree } from './helpers'
 import { LinkCard } from '../Cards'
 import SearchBar from '../SearchBar'
 import Clock from '../Clock'
+import HeaderMenu from '../HeaderMenu'
 import FolderTree from '../FolderTree'
 import { FolderModal, LinkModal, SettingsModal, MoveModal } from '../Modal'
 
@@ -96,9 +97,16 @@ describe('search bar', () => {
 })
 
 describe('clock', () => {
+  it('renders the greeting for a plain settings object', () => {
+    renderWithI18n(<Clock settings={testSettings()} />)
+    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
+  })
+})
+
+describe('header menu', () => {
   it('names the header menu trigger and marks it as opening a menu', () => {
     renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />
+      <HeaderMenu onOpenSettings={noop} onImport={noop} onExport={noop} />
     )
     const trigger = screen.getByRole('button', { name: 'Menu' })
     expect(trigger).toHaveAttribute('aria-haspopup')
@@ -108,7 +116,7 @@ describe('clock', () => {
   it('opens the menu with settings and the data actions', async () => {
     const user = userEvent.setup()
     renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />
+      <HeaderMenu onOpenSettings={noop} onImport={noop} onExport={noop} />
     )
 
     await user.click(screen.getByRole('button', { name: 'Menu' }))

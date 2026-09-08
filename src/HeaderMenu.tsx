@@ -35,7 +35,7 @@ export default function HeaderMenu({
       <Menu.Trigger
         title={t.menu}
         aria-label={t.menu}
-        className="absolute -end-1 top-0 -m-1 flex p-1"
+        className="-m-1 flex p-1"
       >
         <span className="glass glass-hover flex size-8 items-center justify-center rounded-md text-foreground transition-colors duration-150 [&_svg]:size-4">
           <Cog6ToothIcon />

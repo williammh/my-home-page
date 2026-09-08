@@ -123,7 +123,7 @@ describe('direction', () => {
   })
 
   it('sets lang and dir on <html> so logical CSS and modals follow', () => {
-    renderWithI18n(<Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />, {
+    renderWithI18n(<Clock settings={testSettings()} />, {
       locale: 'ar',
     })
     expect(document.documentElement.lang).toBe('ar')
@@ -132,13 +132,13 @@ describe('direction', () => {
 
   it('returns to LTR when the language changes back', () => {
     const { unmount } = renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />,
+      <Clock settings={testSettings()} />,
       { locale: 'he' }
     )
     expect(document.documentElement.dir).toBe('rtl')
     unmount()
 
-    renderWithI18n(<Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />, {
+    renderWithI18n(<Clock settings={testSettings()} />, {
       locale: 'ja',
     })
     expect(document.documentElement.dir).toBe('ltr')
@@ -212,7 +212,7 @@ describe('greeting', () => {
 describe('clock rendering', () => {
   it('gives the time one readable sentence instead of per-character tiles', () => {
     const { container } = renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />
+      <Clock settings={testSettings()} />
     )
     // The flip board is decorative; a visually-hidden sentence carries the
     // time. It is real text rather than an `aria-label`, because `aria-label`
@@ -223,7 +223,7 @@ describe('clock rendering', () => {
 
   it('reads the clock exactly once, with the visible pieces hidden', () => {
     const { container } = renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />
+      <Clock settings={testSettings()} />
     )
     const paragraph = container.querySelector('p')
     // Everything except the sr-only sentence is aria-hidden, so the time is
@@ -238,7 +238,7 @@ describe('clock rendering', () => {
   })
 
   it('never puts the clock in a live region', () => {
-    renderWithI18n(<Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />)
+    renderWithI18n(<Clock settings={testSettings()} />)
     // A per-second live region would announce the time endlessly and drown
     // out the rest of the page.
     expect(document.querySelector('[aria-live]')).toBeNull()
@@ -246,7 +246,7 @@ describe('clock rendering', () => {
 
   it('hides the decorative tile board from assistive tech', () => {
     const { container } = renderWithI18n(
-      <Clock settings={testSettings()} onOpenSettings={() => {}} onImport={() => {}} onExport={() => {}} />
+      <Clock settings={testSettings()} />
     )
     const board = container.querySelector('.split-flap-text')
     expect(board).toHaveAttribute('aria-hidden', 'true')

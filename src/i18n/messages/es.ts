@@ -80,7 +80,6 @@ const es: Messages = {
   chooseFromDevice: 'Elegir del dispositivo',
   imageSelected: 'Imagen seleccionada de este dispositivo',
   imageUrlPlaceholder: 'https://ejemplo.com/imagen.jpg',
-  imageTooLarge: 'La imagen es demasiado grande (máx. 3 MB).',
   resetToDefaults: 'Restablecer valores',
 
   // ── Nombres accesibles ────────────────────────────────────────────────

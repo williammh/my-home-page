@@ -81,7 +81,6 @@ const fr: Messages = {
   chooseFromDevice: 'Choisir depuis l’appareil',
   imageSelected: 'Image sélectionnée depuis cet appareil',
   imageUrlPlaceholder: 'https://exemple.com/image.jpg',
-  imageTooLarge: 'L’image est trop volumineuse (3 Mo maximum).',
   resetToDefaults: 'Réinitialiser',
 
   // ── Noms accessibles ──────────────────────────────────────────────────

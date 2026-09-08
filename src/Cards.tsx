@@ -39,7 +39,7 @@ export const cardIconSlotCls = 'flex size-[34px] items-center justify-center'
 // pixels more than before; `min-h-[86px]` on `cardBase` is a minimum; not a
 // cap, so the card grows to fit exactly as it already does for any two-line
 // label, rather than clipping.
-export const cardLabelCls = 'line-clamp-2 max-w-full text-center text-xs leading-tight'
+export const cardLabelCls = '[text-shadow:0_1px_3px_rgb(0_0_0/0.85),0_1px_7px_rgb(0_0_0/0.6)] line-clamp-2 max-w-full text-center text-xs font-medium leading-tight'
 
 const cardActionCls =
   'flex size-6 items-center justify-center rounded-md bg-foreground/10 text-foreground backdrop-blur-sm transition-colors hover:bg-foreground/20 [&_svg]:size-[13px] [&_svg]:stroke-2'

@@ -222,10 +222,6 @@ export function FolderModal({
   )
 }
 
-// Max size for a background image read from disk and stored as a data URL in
-// localStorage — large files risk blowing the ~5MB storage quota.
-const MAX_BACKGROUND_FILE_BYTES = 3 * 1024 * 1024
-
 const segmentedCls = 'inline-flex rounded-lg border border-border bg-card p-0.5'
 // `min-h-11` (44px) so each segment clears the touch target minimum — at
 // `py-1.5` this was ~34px tall, the shortest tappable control in the app.
@@ -259,7 +255,6 @@ export function SettingsModal({
   const [backgroundType, setBackgroundType] = useState(
     initial.backgroundImage ? 'image' : initial.backgroundColor ? 'color' : 'none'
   )
-  const [fileError, setFileError] = useState('')
 
   const save = (e: FormEvent) => {
     e.preventDefault()
@@ -280,11 +275,6 @@ export function SettingsModal({
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > MAX_BACKGROUND_FILE_BYTES) {
-      setFileError(t.imageTooLarge)
-      return
-    }
-    setFileError('')
     const reader = new FileReader()
     reader.onload = () => setBackgroundImage(String(reader.result ?? ''))
     reader.readAsDataURL(file)
@@ -301,7 +291,6 @@ export function SettingsModal({
     setBackgroundImage(DEFAULT_SETTINGS.backgroundImage)
     setBackgroundColor(DEFAULT_SETTINGS.backgroundColor)
     setBackgroundType(DEFAULT_SETTINGS.backgroundImage ? 'image' : DEFAULT_SETTINGS.backgroundColor ? 'color' : 'none')
-    setFileError('')
   }
 
   return (
@@ -404,7 +393,6 @@ export function SettingsModal({
           <div className="mt-3">
             <input
               aria-label={t.backgroundImage}
-              aria-describedby={fileError ? `${id}-file-error` : undefined}
               value={backgroundImage.startsWith('data:') ? '' : backgroundImage}
               onChange={(e) => setBackgroundImage(e.target.value)}
               placeholder={backgroundImage.startsWith('data:') ? t.imageSelected : t.imageUrlPlaceholder}
@@ -422,7 +410,6 @@ export function SettingsModal({
               )}
               <input id="background-file-input" type="file" accept="image/*" onChange={onFile} className="hidden" />
             </div>
-            {fileError && <div id={`${id}-file-error`} role="alert" className="mt-1.5 text-xs text-destructive">{fileError}</div>}
             {backgroundImage && (
               <div
                 aria-hidden="true"

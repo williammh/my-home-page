@@ -85,7 +85,6 @@ const ja: Messages = {
   chooseFromDevice: 'デバイスから選択',
   imageSelected: 'このデバイスから画像を選択しました',
   imageUrlPlaceholder: 'https://example.com/image.jpg',
-  imageTooLarge: '画像が大きすぎます (最大 3 MB)。',
   resetToDefaults: '既定値に戻す',
 
   // ── アクセシブルな名前 ────────────────────────────────────────────────

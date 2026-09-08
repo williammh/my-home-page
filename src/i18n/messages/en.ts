@@ -125,7 +125,6 @@ const en = {
   chooseFromDevice: 'Choose from device',
   imageSelected: 'Image selected from this device',
   imageUrlPlaceholder: 'https://example.com/image.jpg',
-  imageTooLarge: 'Image is too large (max 3MB).',
   resetToDefaults: 'Reset to defaults',
   // ── Accessible names ──────────────────────────────────────────────────
   // Icon-only controls need a name that is readable without seeing the icon,
