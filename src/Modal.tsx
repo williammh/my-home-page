@@ -3,6 +3,7 @@ import { ICON_KEYS, getIcon } from './icons'
 import { Button } from '@/components/ui/button'
 import { DATE_FORMAT_KEYS, dateFormatOptions } from './dateFormats'
 import { DEFAULT_SETTINGS } from './store'
+import { DEVICE_BACKGROUND_IMAGE, setBackgroundImageBlob, clearBackgroundImageBlob, useResolvedBackgroundImage } from './backgroundImageDb'
 import { LOCALES, detectLocale, localeMeta, useI18n } from './i18n'
 import type { FolderNode, LinkNode, Settings } from './types'
 
@@ -250,6 +251,7 @@ export function SettingsModal({
   const [openInNewTab, setOpenInNewTab] = useState(initial.openInNewTab ?? false)
   const [backgroundImage, setBackgroundImage] = useState(initial.backgroundImage ?? '')
   const [backgroundColor, setBackgroundColor] = useState(initial.backgroundColor ?? '')
+  const previewUrl = useResolvedBackgroundImage(backgroundImage)
   // Background image and color are mutually exclusive — track which one the
   // user is editing so switching tabs clears the other on save.
   const [backgroundType, setBackgroundType] = useState(
@@ -275,9 +277,10 @@ export function SettingsModal({
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => setBackgroundImage(String(reader.result ?? ''))
-    reader.readAsDataURL(file)
+    // Stored in IndexedDB rather than inlined as a data URL: the settings
+    // object (this sentinel included) stays small enough for localStorage
+    // regardless of how large the picked image is.
+    setBackgroundImageBlob(file).then(() => setBackgroundImage(DEVICE_BACKGROUND_IMAGE))
   }
 
   const resetToDefaults = () => {
@@ -393,9 +396,9 @@ export function SettingsModal({
           <div className="mt-3">
             <input
               aria-label={t.backgroundImage}
-              value={backgroundImage.startsWith('data:') ? '' : backgroundImage}
+              value={backgroundImage === DEVICE_BACKGROUND_IMAGE ? '' : backgroundImage}
               onChange={(e) => setBackgroundImage(e.target.value)}
-              placeholder={backgroundImage.startsWith('data:') ? t.imageSelected : t.imageUrlPlaceholder}
+              placeholder={backgroundImage === DEVICE_BACKGROUND_IMAGE ? t.imageSelected : t.imageUrlPlaceholder}
               spellCheck="false"
               className={inputCls}
             />
@@ -404,7 +407,15 @@ export function SettingsModal({
                 {t.chooseFromDevice}
               </Button>
               {backgroundImage && (
-                <Button type="button" variant="outline" size="sm" onClick={() => setBackgroundImage('')}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (backgroundImage === DEVICE_BACKGROUND_IMAGE) clearBackgroundImageBlob()
+                    setBackgroundImage('')
+                  }}
+                >
                   {t.clear}
                 </Button>
               )}
@@ -414,7 +425,7 @@ export function SettingsModal({
               <div
                 aria-hidden="true"
                 className="mt-2.5 h-20 w-full rounded-lg border border-border bg-cover bg-center"
-                style={{ backgroundImage: `url(${backgroundImage})` }}
+                style={{ backgroundImage: `url(${previewUrl})` }}
               />
             )}
           </div>

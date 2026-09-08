@@ -7,6 +7,7 @@ import { LinkCard, cardBase, cardIconSlotCls, cardLabelCls } from './Cards'
 import FolderTree from './FolderTree'
 import { FolderModal, LinkModal, MoveModal, SettingsModal } from './Modal'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
+import { useResolvedBackgroundImage } from './backgroundImageDb'
 import { I18nProvider, useI18n } from './i18n'
 import { headlineCls } from './textTheme'
 import type { FolderNode, LinkNode, Settings, TreeNode } from './types'
@@ -61,6 +62,7 @@ function AppBody({
   const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
   const backgroundRef = useRef<HTMLDivElement>(null)
+  const resolvedBackgroundImage = useResolvedBackgroundImage(settings.backgroundImage)
 
   // Parallax for the background image: on a narrow/short viewport the page
   // itself can grow past one screen and scroll (see the `min-h-dvh` note
@@ -209,7 +211,7 @@ function AppBody({
           onExport={onExport}
         />
       </div>
-      {settings.backgroundImage ? (
+      {resolvedBackgroundImage ? (
         // The wrapper here (not the `-z-10` layer itself) carries
         // `overflow-hidden`: the layer inside is scaled 12% taller than this
         // box so the parallax translate below never uncovers a top/bottom
@@ -225,7 +227,7 @@ function AppBody({
           <div
             ref={backgroundRef}
             className="absolute inset-0 scale-y-[1.12] bg-cover bg-center will-change-transform"
-            style={{ backgroundImage: `url(${settings.backgroundImage})` }}
+            style={{ backgroundImage: `url(${resolvedBackgroundImage})` }}
           />
         </div>
       ) : settings.backgroundColor ? (

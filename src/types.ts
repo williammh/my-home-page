@@ -26,6 +26,13 @@ export interface Settings {
   locale: string
   timeZone: string
   dateFormat: string
+  /**
+   * Either an http(s) URL, or the sentinel `DEVICE_BACKGROUND_IMAGE` meaning
+   * "the image the user picked from their device, stored in IndexedDB" — see
+   * backgroundImageDb.ts. Kept as a plain string (not a data URL) so this
+   * settings object stays small enough for localStorage regardless of the
+   * picked image's size.
+   */
   backgroundImage: string
   backgroundColor: string
   textTheme: 'light' | 'dark'
