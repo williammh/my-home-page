@@ -443,14 +443,16 @@ export default function FolderTree({
             className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pe-3 transition-colors ${
               rootDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
-            // Start padding matches a real folder row's own indent at
-            // level 0 (INDENT * 0 + 8 + 12, see the folder row below), and the
-            // spacer that follows matches TreeExpander's box (w-4 + me-1) so
-            // the root's icon lines up with a folder row's icon exactly —
-            // folder rows always reserve that space for their chevron, even
-            // when they have no children. No `gap` here, same as the folder
-            // row: it relies purely on each child's own margin.
-            style={{ backgroundColor: 'var(--sticky-row-bg)', paddingInlineStart: 8 + 12 }}
+            // One INDENT less than a real level-0 folder row's own start
+            // (INDENT * 0 + 8 + 12, see the folder row below) — the root sits
+            // one level "above" level 0, so its children (which render at
+            // level 0) read as properly nested under it instead of lining up
+            // flush with it. The spacer that follows matches TreeExpander's
+            // box (w-4 + me-1) so the root's icon still lines up with a
+            // folder row's icon, just shifted in by the same amount. No
+            // `gap` here, same as the folder row: it relies purely on each
+            // child's own margin.
+            style={{ backgroundColor: 'var(--sticky-row-bg)', paddingInlineStart: 8 + 12 - INDENT }}
           >
             <span className="me-1 h-4 w-4 shrink-0" />
             <RootIcon className="size-4 shrink-0 text-muted-foreground" />
