@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithI18n, testSettings, sampleTree } from './helpers'
 import { LinkCard } from '../Cards'
 import SearchBar from '../SearchBar'
@@ -95,9 +96,26 @@ describe('search bar', () => {
 })
 
 describe('clock', () => {
-  it('names the settings button', () => {
-    renderWithI18n(<Clock settings={testSettings()} onOpenSettings={noop} />)
-    expect(screen.getByRole('button', { name: 'Settings' })).toBeInTheDocument()
+  it('names the header menu trigger and marks it as opening a menu', () => {
+    renderWithI18n(
+      <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />
+    )
+    const trigger = screen.getByRole('button', { name: 'Menu' })
+    expect(trigger).toHaveAttribute('aria-haspopup')
+    expect(trigger).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('opens the menu with settings and the data actions', async () => {
+    const user = userEvent.setup()
+    renderWithI18n(
+      <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Menu' }))
+
+    expect(await screen.findByRole('menuitem', { name: 'Settings…' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Import bookmarks…' })).toBeInTheDocument()
+    expect(screen.getByRole('menuitem', { name: 'Export bookmarks' })).toBeInTheDocument()
   })
 })
 

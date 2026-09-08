@@ -3,8 +3,10 @@ import { screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { renderWithI18n, sampleTree } from './helpers'
 import FolderTree from '../FolderTree'
+import HeaderMenu from '../HeaderMenu'
 import SearchBar from '../SearchBar'
 import { LinkCard } from '../Cards'
+import { I18nProvider } from '../i18n'
 
 /**
  * Everything reachable with a mouse must be reachable with a keyboard.
@@ -149,5 +151,90 @@ describe('hover-only controls', () => {
     // `opacity-0` until hover would leave a focused button invisible.
     const actions = container.querySelector('.group-hover\\:opacity-100')
     expect(actions?.className).toContain('group-focus-within:opacity-100')
+  })
+})
+
+/**
+ * The app-level actions (Settings, Import, Export) and the edit-mode toggle
+ * were spread across three places: a bare gear in the header, a pencil on the
+ * shortcuts hairline, and a toolbar pinned inside the bookmarks panel. They now
+ * sit in two clusters — a header menu for whole-app actions, and the tree's own
+ * "Bookmarks" row for the controls that act on bookmarks.
+ */
+describe('control placement', () => {
+  it('runs each header menu item through its own handler', async () => {
+    const user = userEvent.setup()
+    const onOpenSettings = vi.fn()
+    const onImport = vi.fn()
+    const onExport = vi.fn()
+    renderWithI18n(
+      <HeaderMenu onOpenSettings={onOpenSettings} onImport={onImport} onExport={onExport} />
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Menu' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Export bookmarks' }))
+    expect(onExport).toHaveBeenCalledOnce()
+    expect(onImport).not.toHaveBeenCalled()
+    expect(onOpenSettings).not.toHaveBeenCalled()
+
+    await user.click(screen.getByRole('button', { name: 'Menu' }))
+    await user.click(await screen.findByRole('menuitem', { name: 'Import bookmarks…' }))
+    expect(onImport).toHaveBeenCalledOnce()
+  })
+
+  it('opens and closes the header menu from the keyboard alone', async () => {
+    const user = userEvent.setup()
+    const onOpenSettings = vi.fn()
+    renderWithI18n(
+      <HeaderMenu onOpenSettings={onOpenSettings} onImport={noop} onExport={noop} />
+    )
+
+    const trigger = screen.getByRole('button', { name: 'Menu' })
+    trigger.focus()
+    await user.keyboard('{Enter}')
+    expect(await screen.findByRole('menuitem', { name: 'Settings…' })).toBeInTheDocument()
+
+    // Escape must both close the menu and hand focus back to the trigger,
+    // otherwise a keyboard user is dropped at the top of the document.
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('menuitem', { name: 'Settings…' })).not.toBeInTheDocument()
+    expect(document.activeElement).toBe(trigger)
+  })
+
+  it('toggles edit mode from the Bookmarks row, naming both states', async () => {
+    const user = userEvent.setup()
+    const onToggleEditing = vi.fn()
+    const { rerender } = renderTree({ editing: false, onToggleEditing })
+
+    const toggle = screen.getByRole('button', { name: 'Edit shortcuts and bookmarks' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await user.click(toggle)
+    expect(onToggleEditing).toHaveBeenCalledOnce()
+
+    // The label has to change with the state — a pressed control still named
+    // "Edit" tells a screen reader user nothing about how to get back out.
+    rerender(
+      <I18nProvider locale="en" timeZone="America/New_York">
+        <FolderTree
+          tree={sampleTree()}
+          selectedId={null}
+          newTab={false}
+          editing
+          onEdit={noop}
+          onRemove={noop}
+          onAdd={noop}
+          onMove={noop}
+          onMoveRequest={noop}
+          onSelect={noop}
+          rootLabel="Bookmarks"
+          onAddRoot={noop}
+          onToggleEditing={onToggleEditing}
+        />
+      </I18nProvider>
+    )
+    expect(screen.getByRole('button', { name: 'Done editing' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    )
   })
 })

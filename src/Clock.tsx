@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Cog6ToothIcon } from '@heroicons/react/24/outline'
+import HeaderMenu from './HeaderMenu'
 import SplitFlapText from './components/SplitFlapText'
 import { greetingFor } from './Greeting'
 import { dateFormatOptions } from './dateFormats'
@@ -7,7 +7,17 @@ import { useI18n } from './i18n'
 import { headlineCls, headlineStrongCls } from './textTheme'
 import type { Settings } from './types'
 
-export default function Clock({ settings, onOpenSettings }: { settings: Settings; onOpenSettings: () => void }) {
+export default function Clock({
+  settings,
+  onOpenSettings,
+  onImport,
+  onExport,
+}: {
+  settings: Settings
+  onOpenSettings: () => void
+  onImport: () => void
+  onExport: () => void
+}) {
   const [now, setNow] = useState(() => new Date())
   const prevTime = useRef<string | null>(null)
 
@@ -56,13 +66,7 @@ export default function Clock({ settings, onOpenSettings }: { settings: Settings
 
   return (
     <div className="relative mb-8">
-      <button
-        type="button"
-        title={t.settings}
-        aria-label={t.settings}
-        onClick={onOpenSettings}
-        className="glass glass-hover absolute -end-1 top-0 flex size-8 items-center justify-center rounded-md text-foreground transition-colors duration-150 [&_svg]:size-4"
-      ><Cog6ToothIcon /></button>
+      <HeaderMenu onOpenSettings={onOpenSettings} onImport={onImport} onExport={onExport} />
 
       {/* Salutation — the one piece of the header that's about the reader, so
           it carries the weight; the clock sentence underneath is supporting. */}

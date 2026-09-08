@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { axe } from 'vitest-axe'
+import { screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { renderWithI18n, testSettings, sampleTree } from './helpers'
 import { LinkCard } from '../Cards'
 import SearchBar from '../SearchBar'
 import Clock from '../Clock'
+import HeaderMenu from '../HeaderMenu'
 import FolderTree from '../FolderTree'
 import { FolderModal, LinkModal, SettingsModal, MoveModal } from '../Modal'
 
@@ -30,7 +33,7 @@ const screens = {
     />
   ),
   'search bar': <SearchBar value="" onChange={noop} />,
-  clock: <Clock settings={testSettings()} onOpenSettings={noop} />,
+  clock: <Clock settings={testSettings()} onOpenSettings={noop} onImport={noop} onExport={noop} />,
   'folder tree': (
     <FolderTree
       tree={sampleTree()}
@@ -76,6 +79,29 @@ describe('axe: right-to-left', () => {
     it(`${name} has no violations in Arabic`, async () => {
       const { container } = renderWithI18n(ui, { locale: 'ar' })
       expect(await axe(container)).toHaveNoViolations()
+    })
+  }
+})
+
+/**
+ * The header menu's popup renders through a portal, so it is not inside the
+ * `container` the scans above walk — and it does not exist at all until the
+ * trigger is used. Opened and scanned separately, in both directions.
+ */
+describe('axe: header menu popup', () => {
+  for (const locale of ['en', 'ar']) {
+    it(`has no violations when open (${locale})`, async () => {
+      const user = userEvent.setup()
+      renderWithI18n(
+        <HeaderMenu onOpenSettings={noop} onImport={noop} onExport={noop} />,
+        { locale }
+      )
+      await user.click(screen.getByRole('button'))
+      const popup = (await screen.findAllByRole('menuitem'))[0].closest('[role="menu"]')
+      // Guards the scan against silently passing on a node that was never
+      // found — an empty element has no violations either.
+      expect(popup!.querySelectorAll('[role="menuitem"]')).toHaveLength(3)
+      expect(await axe(popup as HTMLElement)).toHaveNoViolations()
     })
   }
 })

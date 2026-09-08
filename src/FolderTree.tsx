@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type DragEvent, type RefObject } from 'react'
 import { getIcon } from './icons'
-import { FolderPlusIcon, PencilIcon, TrashIcon, ArrowsUpDownIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
+import { FolderPlusIcon, PencilIcon, PencilSquareIcon, CheckIcon, TrashIcon, ArrowsUpDownIcon, LinkIcon as LinkGlyph } from '@heroicons/react/24/outline'
 import { BookmarkSimpleIcon } from '@phosphor-icons/react'
 import { Highlighted } from './highlight'
 import { useI18n } from './i18n'
@@ -31,6 +31,21 @@ const INDENT = 20
  */
 const rowBtnCls =
   'flex size-6 items-center justify-center rounded-md text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-3.5'
+
+/**
+ * Root-row action button — the controls reached most often, so the hit area
+ * clears the 40px touch target rather than only WCAG's 24px floor.
+ *
+ * The painted box stays 24px (`size-6` + `box-content` padding, so the
+ * background and hover tint are unchanged) while `p-2` grows the target to
+ * 40px. Only the *vertical* padding is cancelled by a negative margin: `-my-2`
+ * keeps the row's height exactly as it was, but the horizontal padding is left
+ * to stand, because that is what separates one button's target from the next.
+ * Cancelling it too (`-m-2`) would overlap adjacent 40px targets by 14px and
+ * make taps near a boundary land on the wrong control.
+ */
+const rootBtnCls =
+  'flex size-6 -my-2 box-content items-center justify-center rounded-md p-2 text-foreground hover:bg-border [&_svg]:size-3.5'
 
 /** ids of every node that matches `query` by name, plus all of their ancestors. */
 function matchIds(nodes: BookmarkNode[], query: string, ancestors: string[] = []): Set<string> {
@@ -364,6 +379,7 @@ export default function FolderTree({
   onSelect,
   rootLabel,
   onAddRoot,
+  onToggleEditing,
 }: {
   tree: BookmarkNode[]
   query?: string
@@ -382,6 +398,9 @@ export default function FolderTree({
   rootLabel?: string
   /** Add a folder/link at the top level, from the root row's own buttons. */
   onAddRoot?: (kind: 'folder' | 'link') => void
+  /** Flip `editing` on and off. The toggle sits on the root row because the
+      mode it controls covers this tree as well as the shortcut grid above. */
+  onToggleEditing?: () => void
 }) {
   const { t } = useI18n()
   const trimmedQuery = query.trim()
@@ -440,7 +459,12 @@ export default function FolderTree({
             // z-index sits above the folder rows, which use `10 + level` —
             // a deeply nested row must not paint over the pinned root. Full
             // width, matching the other rows (see their `mx-0 rounded-none`).
-            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pe-3 transition-colors ${
+            //
+            // `pe-1`, not the `pe-3` the other rows use: the trailing button
+            // carries 16px of its own padding for its touch target, so the
+            // row only adds the 4px needed to reach the same 20px optical
+            // inset — `pe-3` on top of that would push the icons visibly in.
+            className={`group folder-sticky sticky top-0 z-50 -mx-3 flex items-center py-2.5 pe-1 transition-colors ${
               rootDragOver ? 'bg-primary/10 ring-1 ring-inset ring-primary' : ''
             }`}
             // One INDENT less than a real level-0 folder row's own start
@@ -451,30 +475,46 @@ export default function FolderTree({
             // box (w-4 + me-1) so the root's icon still lines up with a
             // folder row's icon, just shifted in by the same amount. No
             // `gap` here, same as the folder row: it relies purely on each
-            // child's own margin.
+            // child's own margin and padding.
             style={{ backgroundColor: 'var(--sticky-row-bg)', paddingInlineStart: 8 + 12 - INDENT }}
           >
             <span className="me-1 h-4 w-4 shrink-0" />
             <RootIcon className="size-4 shrink-0 text-muted-foreground" />
             <span className="ms-1.5 flex-1 truncate text-sm font-medium">{rootLabel}</span>
-            {onAddRoot && (
-              <span className="ms-2 flex shrink-0 items-center gap-0.5">
+            {/* The root row is now the primary control cluster for bookmarks.
+                No `gap` or start margin here: each button carries 16px of its
+                own horizontal padding (see `rootBtnCls`), which both separates
+                the touch targets and spaces the icons apart. */}
+            <span className="flex shrink-0 items-center">
+              {onAddRoot && (
+                <>
+                  <button
+                    type="button"
+                    title={t.newFolder}
+                    aria-label={t.newFolder}
+                    className={rootBtnCls}
+                    onClick={() => onAddRoot('folder')}
+                  ><FolderPlusIcon /></button>
+                  <button
+                    type="button"
+                    title={t.newBookmark}
+                    aria-label={t.newBookmark}
+                    className={rootBtnCls}
+                    onClick={() => onAddRoot('link')}
+                  ><BookmarkSimpleIcon /></button>
+                </>
+              )}
+              {onToggleEditing && (
                 <button
                   type="button"
-                  title={t.newFolder}
-                  aria-label={t.newFolder}
-                  className="flex size-6 items-center justify-center rounded-md text-foreground hover:bg-border [&_svg]:size-3.5"
-                  onClick={() => onAddRoot('folder')}
-                ><FolderPlusIcon /></button>
-                <button
-                  type="button"
-                  title={t.newBookmark}
-                  aria-label={t.newBookmark}
-                  className="flex size-6 items-center justify-center rounded-md text-foreground hover:bg-border [&_svg]:size-3.5"
-                  onClick={() => onAddRoot('link')}
-                ><BookmarkSimpleIcon /></button>
-              </span>
-            )}
+                  title={editing ? t.doneEditingShortcuts : t.editShortcuts}
+                  aria-label={editing ? t.doneEditingShortcuts : t.editShortcuts}
+                  aria-pressed={editing}
+                  className={rootBtnCls}
+                  onClick={onToggleEditing}
+                >{editing ? <CheckIcon /> : <PencilSquareIcon />}</button>
+              )}
+            </span>
           </div>
         )}
 

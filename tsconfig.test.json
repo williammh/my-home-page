@@ -7,5 +7,14 @@
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "noEmit": true
   },
-  "include": ["src/test", "vitest.config.ts"]
+  // `exclude` is inherited from tsconfig.app.json, which excludes `src/test`
+  // so the app build ignores the suites. Left alone it also wins over the
+  // `include` below — `exclude` filters what `include` matched — and this
+  // project would resolve to vitest.config.ts alone, silently typechecking no
+  // test at all. Reset it here so the suites are actually covered.
+  "exclude": [],
+  // `vite-env.d.ts` comes along because the suites import app components that
+  // side-effect-import CSS; without Vite's ambient module types those imports
+  // are errors here even though they are fine in the app project.
+  "include": ["src/test", "src/vite-env.d.ts", "vitest.config.ts"]
 }

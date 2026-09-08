@@ -52,15 +52,24 @@ const en = {
   cancel: 'Cancel',
   save: 'Save',
   dismiss: 'Dismiss',
-  import: 'Import',
-  export: 'Export',
+  // The two data actions read as full sentences in the menu, where there is
+  // room for them and no icon to lean on; the bare verbs are gone with the
+  // toolbar that used to hold them.
+  importBookmarks: 'Import bookmarks…',
+  exportBookmarks: 'Export bookmarks',
+  // Names the gear itself, which now opens a menu rather than going straight
+  // to the settings dialog.
+  menu: 'Menu',
   addShortcut: 'Add shortcut',
   addFolder: 'Add folder',
   addLink: 'Add link',
   newFolder: 'New folder',
   newBookmark: 'New bookmark',
+  // One toggle governs both the shortcut grid and the tree, so it is named for
+  // what it does rather than for the row it sits on.
   editShortcuts: 'Edit shortcuts and bookmarks',
   doneEditingShortcuts: 'Done editing',
+  settingsMenuItem: 'Settings…',
   dropToTopLevel: 'Drop here to move to top level',
   treeEmpty: 'Nothing here yet — add a folder or a bookmark.',
   // The query is quoted inside the message so a language can use its own

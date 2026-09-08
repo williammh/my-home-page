@@ -1,11 +1,10 @@
 import { useState, useEffect, useRef, type ChangeEvent } from 'react'
-import { PlusIcon, ArrowUpTrayIcon, ArrowDownTrayIcon, PencilSquareIcon, CheckIcon } from '@heroicons/react/24/outline'
+import { PlusIcon } from '@heroicons/react/24/outline'
 import Clock from './Clock'
 import SearchBar from './SearchBar'
 import { LinkCard } from './Cards'
 import FolderTree from './FolderTree'
 import { FolderModal, LinkModal, MoveModal, SettingsModal } from './Modal'
-import { Button } from '@/components/ui/button'
 import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
 import { I18nProvider, useI18n } from './i18n'
 import { headlineCls } from './textTheme'
@@ -201,29 +200,24 @@ function AppBody({
           {t.skipToBookmarks}
         </a>
         <header className="shrink-0" aria-label={t.landmarkHeader}>
-          <Clock settings={settings} onOpenSettings={() => setModal({ kind: 'settings' })} />
+          <Clock
+            settings={settings}
+            onOpenSettings={() => setModal({ kind: 'settings' })}
+            onImport={() => fileInputRef.current?.click()}
+            onExport={onExport}
+          />
 
           {(!trimmedQuery || matchedShortcuts.length > 0) && (
             <section className="mb-5" aria-labelledby="shortcuts-heading">
-              <div className={`mb-3.5 flex flex-wrap items-center gap-x-4 gap-y-3 ${headlineCls(settings.textTheme)}`}>
+              {/* The edit toggle used to sit at the end of this hairline, but
+                  it governs the bookmark tree as well as this grid — it now
+                  lives on the tree's own "Bookmarks" row, where its full scope
+                  is legible. The hairline stays as the section divider. */}
+              <div className={`mb-3.5 flex items-center ${headlineCls(settings.textTheme)}`}>
                 <h2 id="shortcuts-heading" className="sr-only">
                   {t.shortcuts}
                 </h2>
-                {/* A hairline fills the row so the edit button doesn't read as
-                    floating unattached at the far edge. */}
                 <div aria-hidden="true" className="h-px flex-1 bg-current opacity-15" />
-                {!trimmedQuery && (
-                  <Button
-                    variant="glass"
-                    size="icon-sm"
-                    className="rounded-lg"
-                    title={editingShortcuts ? t.doneEditingShortcuts : t.editShortcuts}
-                    aria-pressed={editingShortcuts}
-                    onClick={() => setEditingShortcuts((v) => !v)}
-                  >
-                    {editingShortcuts ? <CheckIcon /> : <PencilSquareIcon />}
-                  </Button>
-                )}
               </div>
               <div className={gridCls}>
                 {matchedShortcuts.map((s) => (
@@ -320,38 +314,17 @@ function AppBody({
               onMoveRequest={(node) => setModal({ kind: 'move', node })}
               rootLabel={t.bookmarks}
               onAddRoot={(kind) => setModal({ kind, target: null })}
+              onToggleEditing={() => setEditingShortcuts((v) => !v)}
             />
-            {/* A sibling of FolderTree, not nested inside it: FolderTree's
-                content sits in a vendored `w-full` (not full-height) wrapper,
-                so a footer placed inside it can't use `mt-auto` to reach the
-                panel's bottom when the tree is short — it would just sit
-                right after the last row. As a flex sibling of the whole
-                scroll panel (`flex flex-col` above), `mt-auto` here pushes
-                against the panel itself instead, and `sticky bottom-0` then
-                keeps it pinned once the tree grows past the panel's height. */}
-            <div className="sticky bottom-0 z-50 ms-auto mt-auto flex w-fit flex-wrap justify-end gap-2 pb-3 pt-2">
-              <button
-                type="button"
-                className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-4"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <ArrowUpTrayIcon /> {t.import}
-              </button>
-              <button
-                type="button"
-                className="flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-muted-foreground hover:bg-border hover:text-foreground [&_svg]:size-4"
-                onClick={onExport}
-              >
-                <ArrowDownTrayIcon /> {t.export}
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/json,.json"
-                onChange={onImportFile}
-                className="hidden"
-              />
-            </div>
+            {/* Driven by the header menu's Import item; the input itself is
+                never shown. */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/json,.json"
+              onChange={onImportFile}
+              className="hidden"
+            />
           </div>
         </section>
 
