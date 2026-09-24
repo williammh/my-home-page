@@ -23,7 +23,6 @@ const he: Messages = {
   delete: 'מחיקה',
   cancel: 'ביטול',
   save: 'שמירה',
-  dismiss: 'סגירה',
   importBookmarks: 'ייבוא סימניות…',
   exportBookmarks: 'ייצוא סימניות',
   menu: 'תפריט',
@@ -38,13 +37,6 @@ const he: Messages = {
   dropToTopLevel: 'גרור לכאן כדי להעביר לרמה העליונה',
   treeEmpty: 'עדיין אין כאן כלום — הוסף תיקייה או סימנייה.',
   treeNoMatches: (query) => `אין תיקיות או סימניות התואמות ל„${query}".`,
-
-  // Hebrew: singular for 1, plural otherwise.
-  importedItems: (n) => (n === 1 ? 'יובא פריט אחד.' : `יובאו ${n} פריטים.`),
-  exportedItems: (n) => (n === 1 ? 'יוצא פריט אחד.' : `יוצאו ${n} פריטים.`),
-  importEmpty: 'לא נמצאו סימניות או תיקיות בקובץ הזה.',
-  importInvalid: 'הקובץ הזה אינו JSON תקין.',
-  exportEmpty: 'עדיין אין מה לייצא.',
 
   editFolder: 'עריכת תיקייה',
   editLink: 'עריכת סימנייה',

@@ -23,7 +23,6 @@ const fr: Messages = {
   delete: 'Supprimer',
   cancel: 'Annuler',
   save: 'Enregistrer',
-  dismiss: 'Fermer',
   importBookmarks: 'Importer des favoris…',
   exportBookmarks: 'Exporter les favoris',
   menu: 'Menu',
@@ -38,13 +37,6 @@ const fr: Messages = {
   dropToTopLevel: 'Déposer ici pour déplacer au niveau supérieur',
   treeEmpty: 'Rien ici pour l’instant — ajoutez un dossier ou un favori.',
   treeNoMatches: (query) => `Aucun dossier ni favori ne correspond à « ${query} ».`,
-
-  // French pluralizes from 2 onwards: 0 and 1 both take the singular.
-  importedItems: (n) => `${n} élément${n >= 2 ? 's' : ''} importé${n >= 2 ? 's' : ''}.`,
-  exportedItems: (n) => `${n} élément${n >= 2 ? 's' : ''} exporté${n >= 2 ? 's' : ''}.`,
-  importEmpty: 'Aucun favori ni dossier trouvé dans ce fichier.',
-  importInvalid: 'Ce fichier n’est pas un JSON valide.',
-  exportEmpty: 'Rien à exporter pour l’instant.',
 
   editFolder: 'Modifier le dossier',
   editLink: 'Modifier le favori',

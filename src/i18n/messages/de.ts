@@ -23,7 +23,6 @@ const de: Messages = {
   delete: 'Löschen',
   cancel: 'Abbrechen',
   save: 'Speichern',
-  dismiss: 'Schließen',
   importBookmarks: 'Lesezeichen importieren …',
   exportBookmarks: 'Lesezeichen exportieren',
   menu: 'Menü',
@@ -38,12 +37,6 @@ const de: Messages = {
   dropToTopLevel: 'Hier ablegen, um auf die oberste Ebene zu verschieben',
   treeEmpty: 'Noch nichts vorhanden — füge einen Ordner oder ein Lesezeichen hinzu.',
   treeNoMatches: (query) => `Keine Ordner oder Lesezeichen stimmen mit „${query}“ überein.`,
-
-  importedItems: (n) => `${n} ${n === 1 ? 'Element' : 'Elemente'} importiert.`,
-  exportedItems: (n) => `${n} ${n === 1 ? 'Element' : 'Elemente'} exportiert.`,
-  importEmpty: 'In dieser Datei wurden keine Lesezeichen oder Ordner gefunden.',
-  importInvalid: 'Diese Datei ist kein gültiges JSON.',
-  exportEmpty: 'Noch nichts zum Exportieren vorhanden.',
 
   editFolder: 'Ordner bearbeiten',
   editLink: 'Lesezeichen bearbeiten',

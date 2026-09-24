@@ -23,7 +23,6 @@ const zh: Messages = {
   delete: '删除',
   cancel: '取消',
   save: '保存',
-  dismiss: '关闭',
   importBookmarks: '导入书签…',
   exportBookmarks: '导出书签',
   menu: '菜单',
@@ -38,13 +37,6 @@ const zh: Messages = {
   dropToTopLevel: '拖放到此处以移至顶层',
   treeEmpty: '这里还没有内容 — 添加一个文件夹或书签。',
   treeNoMatches: (query) => `没有与“${query}”匹配的文件夹或书签。`,
-
-  // Chinese has no plural inflection.
-  importedItems: (n) => `已导入 ${n} 个项目。`,
-  exportedItems: (n) => `已导出 ${n} 个项目。`,
-  importEmpty: '在该文件中未找到书签或文件夹。',
-  importInvalid: '该文件不是有效的 JSON。',
-  exportEmpty: '暂无可导出的内容。',
 
   editFolder: '编辑文件夹',
   editLink: '编辑书签',

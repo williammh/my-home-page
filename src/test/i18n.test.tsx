@@ -97,7 +97,6 @@ describe('message catalogs', () => {
       expect(c.deleteNamed('THING'), `${tag}.deleteNamed`).toContain('THING')
       expect(c.moveTitle('THING'), `${tag}.moveTitle`).toContain('THING')
       expect(c.treeNoMatches('QUERY'), `${tag}.treeNoMatches`).toContain('QUERY')
-      expect(c.importedItems(3), `${tag}.importedItems`).toContain('3')
     }
   })
 })

@@ -6,7 +6,7 @@ import SearchBar from './SearchBar'
 import { LinkCard, cardBase, cardIconSlotCls, cardLabelCls } from './Cards'
 import FolderTree from './FolderTree'
 import { FolderModal, LinkModal, MoveModal, SettingsModal } from './Modal'
-import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree, countNodes } from './store'
+import { useTree, useShortcuts, useSettings, newFolder, newLink, parseImportedTree } from './store'
 import { useResolvedBackgroundImage } from './backgroundImageDb'
 import { I18nProvider, useI18n } from './i18n'
 import { headlineCls } from './textTheme'
@@ -59,7 +59,6 @@ function AppBody({
   // a hover, for touch screens and for seeing the whole grid's controls at
   // once.
   const [editingShortcuts, setEditingShortcuts] = useState(false)
-  const [note, setNote] = useState<{ ok: boolean; text: string } | null>(null)   // import/export banner under the Bookmarks header
   const fileInputRef = useRef<HTMLInputElement>(null)
   const backgroundRef = useRef<HTMLDivElement>(null)
   const resolvedBackgroundImage = useResolvedBackgroundImage(settings.backgroundImage)
@@ -141,7 +140,7 @@ function AppBody({
 
   // Import a previously exported tree (the `myhomepage.tree.v1` shape) from a
   // JSON file. Everything is validated in `parseImportedTree`; here we only
-  // deal with reading the file and reporting the outcome.
+  // deal with reading the file.
   const onImportFile = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     // Reset immediately so picking the same file twice in a row still fires
@@ -151,15 +150,10 @@ function AppBody({
 
     try {
       const nodes = parseImportedTree(await file.text())
-      if (nodes.length === 0) {
-        setNote({ ok: false, text: t.importEmpty })
-        return
-      }
+      if (nodes.length === 0) return
       importNodes(nodes)
-      const n = countNodes(nodes)
-      setNote({ ok: true, text: t.importedItems(n) })
     } catch {
-      setNote({ ok: false, text: t.importInvalid })
+      // Invalid file: nothing to import.
     }
   }
 
@@ -168,10 +162,7 @@ function AppBody({
   // rather than read back out of localStorage, so what lands in the file is
   // what's on screen.
   const onExport = () => {
-    if (tree.length === 0) {
-      setNote({ ok: false, text: t.exportEmpty })
-      return
-    }
+    if (tree.length === 0) return
 
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(tree, null, 2)], { type: 'application/json' })
@@ -185,9 +176,6 @@ function AppBody({
     // next line can pull the blob out from under a download that hasn't
     // started yet. Deferring frees it without racing the save.
     setTimeout(() => URL.revokeObjectURL(url), 10_000)
-
-    const n = countNodes(tree)
-    setNote({ ok: true, text: t.exportedItems(n) })
   }
 
   return (
@@ -223,6 +211,18 @@ function AppBody({
         // can't cut off genuine page overflow (the case where content is
         // taller than `min-h-dvh` and the *page* is meant to scroll) — that
         // overflow happens on the parent, one level up, which stays unclipped.
+        //
+        // `inset-0` here does sit flush against the *edge of the reserved
+        // scrollbar gutter*, not the outer edge of the gutter itself (see
+        // `html`'s `scrollbar-gutter: stable` in index.css) — but that gutter
+        // is exactly where the scrollbar itself paints, right up against the
+        // content with no gap, so there's nothing left uncovered. (Tried
+        // `w-[100vw]` to reach under the gutter regardless — reverted: `vw`
+        // is spec'd against the viewport *including* the scrollbar, so on a
+        // page that actually has one this widens the layer past `overflow`'s
+        // clipping ability higher up the tree and reintroduces the
+        // site-wide horizontal scrollbar the parallax layer's own comment
+        // above warns about.)
         <div className="absolute inset-0 -z-10 overflow-hidden">
           <div
             ref={backgroundRef}
@@ -239,12 +239,25 @@ function AppBody({
           jump. `absolute` inside this `min-h-dvh` wrapper is sized once
           against the document instead, so it only grows if the content
           itself grows past a full screen. */}
-      {/* `min-h-*` rather than a fixed height: the page is a single-screen
-          layout whenever it fits, but on a short or narrow viewport the
-          content grows and the page scrolls normally. Pinning to exactly one
-          screen instead made the header and the bookmarks panel compete for a
-          fixed budget, which clipped whichever lost through the middle of a
-          card.
+      {/* `min-h-dvh` alone (no ceiling) used to leave this flex column's
+          height indefinite, which meant `flex-1 min-h-0` on the bookmarks
+          panel below had nothing to shrink against: a flex child only gets
+          clamped to its share of the *remaining* space when the container's
+          own height is definite, so the panel just grew to fit however many
+          rows were expanded, taking the whole page — and the background
+          layer parallaxing off it — down with it instead of scrolling
+          in place. `max-h-dvh` gives the column that ceiling, so growth past
+          it goes to the panel's own scrollbar.
+
+          This isn't the fixed-height version that was tried and reverted
+          before (see the bookmarks `<section>`'s `min-h-[320px]` below): a
+          *fixed* height on this column made the header and the panel split
+          one rigid budget, clipping whichever lost. `max-h-dvh` only sets a
+          ceiling — content still renders at its natural size below that, and
+          on a short/narrow viewport where the header alone exceeds one
+          screen, the column simply grows past its max-height (a max-height
+          is not a hard clip) and the page scrolls normally, the same
+          fallback as before.
 
           `dvh`, not `vh`: on mobile browsers `vh` is measured against the
           viewport with the URL bar *retracted*, so a `100vh` layout runs under
@@ -252,7 +265,7 @@ function AppBody({
           as it actually is. The safe-area insets keep content clear of a
           notch in landscape and the home indicator at the bottom. */}
       <div
-        className="mx-auto flex min-h-dvh max-w-[1080px] flex-col pt-[clamp(24px,9vh,96px)]"
+        className="mx-auto flex min-h-dvh max-h-dvh max-w-[1080px] flex-col pt-[clamp(24px,9vh,96px)]"
         style={{
           // `max()` of the design's gutter and the device's own inset, so a
           // notch in landscape widens the padding but never narrows it.
@@ -329,35 +342,6 @@ function AppBody({
         </header>
 
         <section className="flex min-h-[320px] flex-1 flex-col" aria-label={t.landmarkBookmarks}>
-          {/* `role="status"` (polite): the import/export outcome is the only
-              feedback that the action did anything, and it is otherwise
-              announced to nobody. Polite rather than assertive so it waits for
-              a pause instead of cutting the user off. */}
-          {note && (
-            <div
-              // `role="status"`, not `<output>`: `<output>` is specified as the
-              // result of a calculation, and this is an operation's outcome.
-              // Both are polite live regions; only this one says the right
-              // thing about what the text is.
-              role="status"
-              className={`mb-3 flex shrink-0 items-center justify-between gap-3 rounded-lg border px-3 py-2 text-xs ${
-                note.ok
-                  ? 'border-primary/40 bg-primary/10 text-foreground'
-                  : 'border-destructive/40 bg-destructive/10 text-foreground'
-              }`}
-            >
-              <span>{note.text}</span>
-              <button
-                type="button"
-                title={t.dismiss}
-                className="min-h-6 shrink-0 rounded-md px-1.5 py-0.5 text-muted-foreground hover:text-foreground"
-                onClick={() => setNote(null)}
-              >
-                {t.dismiss}
-              </button>
-            </div>
-          )}
-
           {/* The panel is the scroll container, and both the "Bookmarks" root
               row and the import/export bar are sticky *inside* it — so they
               stay put against the glass while the tree scrolls under them,

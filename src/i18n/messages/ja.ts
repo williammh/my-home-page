@@ -27,7 +27,6 @@ const ja: Messages = {
   delete: '削除',
   cancel: 'キャンセル',
   save: '保存',
-  dismiss: '閉じる',
   importBookmarks: 'ブックマークをインポート…',
   exportBookmarks: 'ブックマークをエクスポート',
   menu: 'メニュー',
@@ -42,13 +41,6 @@ const ja: Messages = {
   dropToTopLevel: 'ここにドロップして最上位に移動',
   treeEmpty: 'まだ何もありません。フォルダかブックマークを追加してください。',
   treeNoMatches: (query) => `「${query}」に一致するフォルダやブックマークはありません。`,
-
-  // Japanese has no plural inflection — one form covers every count.
-  importedItems: (n) => `${n} 件をインポートしました。`,
-  exportedItems: (n) => `${n} 件をエクスポートしました。`,
-  importEmpty: 'そのファイルにブックマークやフォルダは見つかりませんでした。',
-  importInvalid: 'そのファイルは有効な JSON ではありません。',
-  exportEmpty: 'エクスポートできるものがまだありません。',
 
   editFolder: 'フォルダを編集',
   editLink: 'ブックマークを編集',

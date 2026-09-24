@@ -23,7 +23,6 @@ const es: Messages = {
   delete: 'Eliminar',
   cancel: 'Cancelar',
   save: 'Guardar',
-  dismiss: 'Descartar',
   importBookmarks: 'Importar marcadores…',
   exportBookmarks: 'Exportar marcadores',
   menu: 'Menú',
@@ -38,12 +37,6 @@ const es: Messages = {
   dropToTopLevel: 'Suelta aquí para mover al nivel superior',
   treeEmpty: 'Aquí no hay nada todavía: añade una carpeta o un marcador.',
   treeNoMatches: (query) => `Ningún marcador ni carpeta coincide con «${query}».`,
-
-  importedItems: (n) => `Se ${n === 1 ? 'importó' : 'importaron'} ${n} ${n === 1 ? 'elemento' : 'elementos'}.`,
-  exportedItems: (n) => `Se ${n === 1 ? 'exportó' : 'exportaron'} ${n} ${n === 1 ? 'elemento' : 'elementos'}.`,
-  importEmpty: 'No se encontraron marcadores ni carpetas en ese archivo.',
-  importInvalid: 'Ese archivo no es un JSON válido.',
-  exportEmpty: 'Todavía no hay nada que exportar.',
 
   editFolder: 'Editar carpeta',
   editLink: 'Editar marcador',

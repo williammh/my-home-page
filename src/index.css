@@ -313,28 +313,50 @@
    Scrollbars
    ---------------------------------------------------------------------------
    The default scrollbar is an opaque OS-colored slab that ignores the theme
-   and sits on top of the glass. These rules restyle it from the same tokens
-   everything else uses: a transparent track (so the glass shows through) and
-   a translucent `--foreground` thumb, which reads correctly in both light and
-   dark without a second set of values.
+   and sits on top of the glass — or, on the page itself, right on top of the
+   background photo, where its stock gray track reads as a seam across the
+   image. These rules restyle it from the same tokens everything else uses: a
+   transparent track (so the glass or background shows through) and a
+   translucent `--foreground` thumb, which reads correctly in both light and
+   dark without a second set of values. `html` gets the same treatment as
+   `.scroll-themed` (the bookmarks panel, the Modal) so the page's own
+   scrollbar — the one that appears when the bookmarks tree grows the
+   document past one screen — doesn't stand out as the one untreated bar.
 
    Firefox only supports the two `scrollbar-*` properties; WebKit/Blink needs
    the pseudo-elements, so both are declared. */
 @layer components {
+  html,
   .scroll-themed {
     scrollbar-width: thin;
     scrollbar-color: var(--scroll-thumb) transparent;
+    /* The bookmarks panel changes content height as folders expand/collapse
+       — its own flex box is what scrolls (see the layout column's
+       `max-h-dvh` in App.tsx, which caps it so this growth can't escape to
+       the document and drag the page's background layer with it). Its
+       scrollbar can flash in and out several times over one 150ms animation
+       as layout is recalculated every frame. `stable` reserves the gutter
+       unconditionally, so there's no track appearing/disappearing to
+       flicker and no content-width change alongside it. Applied to `html`
+       too even though the page itself only grows past one screen from
+       *static* content (a short/narrow viewport, or many shortcuts) — never
+       from a folder toggle — so its scrollbar doesn't stand out as the one
+       untreated bar on the rare layout where it does appear. */
+    scrollbar-gutter: stable;
   }
 
+  html::-webkit-scrollbar,
   .scroll-themed::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
 
+  html::-webkit-scrollbar-track,
   .scroll-themed::-webkit-scrollbar-track {
     background: transparent;
   }
 
+  html::-webkit-scrollbar-thumb,
   .scroll-themed::-webkit-scrollbar-thumb {
     background-color: var(--scroll-thumb);
     border-radius: 999px;
@@ -345,6 +367,8 @@
     background-clip: content-box;
   }
 
+  html:hover::-webkit-scrollbar-thumb,
+  html::-webkit-scrollbar-thumb:hover,
   .scroll-themed:hover::-webkit-scrollbar-thumb,
   .scroll-themed::-webkit-scrollbar-thumb:hover {
     background-color: var(--scroll-thumb-hover);
@@ -352,10 +376,12 @@
 
   /* The corner where the two bars meet, and the WebKit stepper buttons, both
      default to a light gray patch that shows as a notch on a dark panel. */
+  html::-webkit-scrollbar-corner,
   .scroll-themed::-webkit-scrollbar-corner {
     background: transparent;
   }
 
+  html::-webkit-scrollbar-button,
   .scroll-themed::-webkit-scrollbar-button {
     display: none;
   }

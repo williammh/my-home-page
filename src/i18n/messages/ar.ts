@@ -25,7 +25,6 @@ const ar: Messages = {
   delete: 'حذف',
   cancel: 'إلغاء',
   save: 'حفظ',
-  dismiss: 'إغلاق',
   importBookmarks: 'استيراد الإشارات المرجعية…',
   exportBookmarks: 'تصدير الإشارات المرجعية',
   menu: 'القائمة',
@@ -40,30 +39,6 @@ const ar: Messages = {
   dropToTopLevel: 'أفلت هنا للنقل إلى المستوى الأعلى',
   treeEmpty: 'لا يوجد شيء هنا بعد — أضف مجلدًا أو إشارة مرجعية.',
   treeNoMatches: (query) => `لا توجد مجلدات أو إشارات مرجعية تطابق «${query}».`,
-
-  // Arabic has six plural categories; Intl.PluralRules picks the right one.
-  // `zero` is handled as its own sentence rather than as a count phrase: the
-  // count construction would read "imported any item" instead of "no items
-  // were imported".
-  importedItems: (n) => {
-    if (n === 0) return 'لم يتم استيراد أي عنصر.'
-    const forms: Record<string, string> = {
-      one: 'عنصر واحد', two: 'عنصرين',
-      few: `${n} عناصر`, many: `${n} عنصرًا`, other: `${n} عنصر`,
-    }
-    return `تم استيراد ${forms[new Intl.PluralRules('ar').select(n)] ?? `${n} عنصر`}.`
-  },
-  exportedItems: (n) => {
-    if (n === 0) return 'لم يتم تصدير أي عنصر.'
-    const forms: Record<string, string> = {
-      one: 'عنصر واحد', two: 'عنصرين',
-      few: `${n} عناصر`, many: `${n} عنصرًا`, other: `${n} عنصر`,
-    }
-    return `تم تصدير ${forms[new Intl.PluralRules('ar').select(n)] ?? `${n} عنصر`}.`
-  },
-  importEmpty: 'لم يتم العثور على إشارات مرجعية أو مجلدات في هذا الملف.',
-  importInvalid: 'هذا الملف ليس JSON صالحًا.',
-  exportEmpty: 'لا يوجد شيء للتصدير بعد.',
 
   editFolder: 'تعديل المجلد',
   editLink: 'تعديل الإشارة المرجعية',

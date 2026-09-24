@@ -95,14 +95,6 @@ export function parseImportedTree(text: string): TreeNode[] {
   return sanitizeNodes(JSON.parse(text))
 }
 
-/** Total folders + links in a node list, for reporting what an import added. */
-export function countNodes(nodes: TreeNode[]): number {
-  return nodes.reduce(
-    (n, node) => n + 1 + (node.type === 'folder' ? countNodes(node.children) : 0),
-    0
-  )
-}
-
 // What a fresh load gets, same idea as `DEFAULT_SHORTCUTS` for the shortcut grid.
 const DEFAULT_BOOKMARKS: TreeNode[] = [
   { id: 'default-bookmark-0', type: 'link', name: 'williammh.github.io', url: 'https://williammh.github.io' },

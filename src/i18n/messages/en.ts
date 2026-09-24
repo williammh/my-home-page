@@ -51,7 +51,6 @@ const en = {
   delete: 'Delete',
   cancel: 'Cancel',
   save: 'Save',
-  dismiss: 'Dismiss',
   // The two data actions read as full sentences in the menu, where there is
   // room for them and no icon to lean on; the bare verbs are gone with the
   // toolbar that used to hold them.
@@ -75,16 +74,6 @@ const en = {
   // The query is quoted inside the message so a language can use its own
   // quotation marks — „so", «so» or 「so」 — rather than the ASCII pair.
   treeNoMatches: (query: string) => `No folders or bookmarks match "${query}".`,
-
-  // ── Import / export notices ───────────────────────────────────────────
-  // Plural forms live in the catalog: English needs two, and other languages
-  // need anywhere from one to six. `Intl.PluralRules` picks the category, so a
-  // translation returns the right form without the caller knowing the rules.
-  importedItems: (n: number) => `Imported ${n} ${n === 1 ? 'item' : 'items'}.`,
-  exportedItems: (n: number) => `Exported ${n} ${n === 1 ? 'item' : 'items'}.`,
-  importEmpty: 'No bookmarks or folders found in that file.',
-  importInvalid: "That file isn't valid JSON.",
-  exportEmpty: 'Nothing to export yet.',
 
   // ── Folder / link modals ──────────────────────────────────────────────
   editFolder: 'Edit folder',
