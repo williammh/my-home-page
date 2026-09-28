@@ -3,6 +3,13 @@ import * as axeMatchers from 'vitest-axe/matchers'
 import { expect, afterEach, vi } from 'vitest'
 import { cleanup } from '@testing-library/react'
 
+// Node 22+'s own (experimental, on by default as of Node 25) `localStorage`
+// global wins over jsdom's: it's defined before this file ever runs, so
+// nothing here can undo it. Without a `--localstorage-file`, that global is
+// a stub missing `clear()` and the rest of the real API, which broke every
+// test that touches storage. Disabled via `NODE_OPTIONS` in the `test`/
+// `test:watch`/`check` scripts in package.json, not here — a Node flag can
+// only take effect before the process starts.
 expect.extend(axeMatchers)
 
 afterEach(cleanup)
